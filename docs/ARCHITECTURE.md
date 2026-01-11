@@ -17,10 +17,12 @@ Este proyecto implementa una **Arquitectura Hexagonal** (Ports & Adapters) estri
 La estructura de carpetas es semántica y refleja la inversión de dependencias. A continuación se detalla la responsabilidad de cada módulo:
 
 ### 1. Domain Layer (`src/main/java/com/homebanking/domain`)
-Es el corazón del software. No tiene dependencias externas.
-* **`entity/`**: Objetos de negocio con estado y comportamiento (ej. `Account`, `Transaction`).
-* **`service/`**: Lógica de dominio pura que involucra múltiples entidades.
-* **`exception/`**: Excepciones de dominio (ej. `InsufficientFundsException`), desacopladas de códigos HTTP.
+Es el corazón del software. No tiene dependencias externas ni de frameworks.
+* **`entity/`**: Objetos de negocio con comportamiento y validación (ej. `Account`, `User`). Siguen el principio de **Entidades Ricas**.
+* **`exception/`**: Excepciones de negocio (ej. `InvalidUserDataException`), desacopladas de códigos HTTP.
+* **`util/`**: Constantes y reglas de negocio compartidas (ej. `DomainErrorMessages`). Permite evitar "Magic Strings" y centralizar textos de error.
+* **`service/`**: Lógica de dominio pura que orquesta interacciones entre múltiples entidades (a implementar).
+* **`service/`**: Lógica de dominio pura que orquesta interacciones entre múltiples entidades (a implementar).
 
 ### 2. Application Layer (`src/main/java/com/homebanking/application`)
 Orquesta los casos de uso. Define **QUÉ** hace el sistema.
@@ -81,6 +83,12 @@ Se ha decidido **no compartir modelos** entre capas para evitar el acoplamiento 
 * **Web DTO:** Optimizado para JSON y validaciones de entrada.
 * **Domain Entity:** Optimizado para lógica de negocio y consistencia.
 * **Persistence Entity:** Optimizado para tablas SQL y relaciones ORM.
+
+### Estrategia de Validación de Dominio
+Para garantizar la integridad de los datos, opté por una estrategia de **Validación en Constructor con Métodos Privados**:
+1. **Fail-Fast:** No es posible instanciar una entidad en un estado inválido. Si los datos son incorrectos, el constructor lanza una excepción inmediata.
+2. **Clean Code:** Para evitar la "Obsesión por los Primitivos" sin sobrecargar el proyecto con demasiadas clases pequeñas (Value Objects) en esta etapa temprana, utilizo métodos privados de validación (`validateDni`, `validateAge`) dentro de la entidad.
+3. **Encapsulamiento:** Las reglas como "Mayoría de edad" o "Formato de CBU" viven dentro de la entidad correspondiente, no dispersas en servicios externos.
 
 ### Gestión de Errores
 Las excepciones lanzadas en el dominio (`domain/exception`) son capturadas por un manejador global en la capa de infraestructura, traduciéndolas a respuestas HTTP estandarizadas (400, 404, 409) con mensajes claros para el cliente.

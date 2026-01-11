@@ -127,9 +127,23 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 ```
 
 
-## 🤝 Contribución y Estado ##
+## 🤝 Contribución y Estado del Proyecto ##
 
-🟡 Fase Inicial: Actualmente se ha definido la estructura completa de carpetas, interfaces de puertos y la configuración base del pom.xml. Se está procediendo con la implementación de las entidades de dominio y casos de uso.
+🟢 **Fase 1: Núcleo de Dominio (Base)**
+
+Se ha completado la implementación de las entidades estructurales (`User`, `Account`) siguiendo principios estrictos de DDD.
+
+**Funcionalidades Implementadas:**
+- **Entidades Ricas:** `User` y `Account` encapsulan reglas de negocio y no son simples estructuras de datos.
+- **Validaciones de Integridad:**
+    - Control de edad mínima (18+) y validación de formatos (DNI numérico, Email, Password segura).
+    - Validación de CBU (longitud exacta y contenido) y Alias bancario.
+    - Estrategia *Zero-Trust*: Las entidades se autovalidan en el constructor mediante métodos privados.
+- **Gestión de Errores:** Jerarquía de excepciones propia (`DomainException`) y centralización de mensajes.
+
+**🚀 Próximos Pasos Inmediatos:**
+1. **Ampliación del Dominio:** Definición del Núcleo Transaccional (**Transferencias** y **Tarjetas**).
+2. **Infraestructura:** Definición de Puertos (Interfaces) e implementación de Adaptadores de Persistencia (JPA).
 
 © 2026 - Desarrollado por Genaro Rotstein
 
