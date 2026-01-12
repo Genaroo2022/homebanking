@@ -129,21 +129,25 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 
 ## 🤝 Contribución y Estado del Proyecto ##
 
-🟢 **Fase 1: Núcleo de Dominio (Base)**
+## 🤝 Estado del Proyecto
 
-Se ha completado la implementación de las entidades estructurales (`User`, `Account`) siguiendo principios estrictos de DDD.
+🟢 **Fase 1: Núcleo de Dominio (COMPLETO)**
 
-**Funcionalidades Implementadas:**
-- **Entidades Ricas:** `User` y `Account` encapsulan reglas de negocio y no son simples estructuras de datos.
-- **Validaciones de Integridad:**
-    - Control de edad mínima (18+) y validación de formatos (DNI numérico, Email, Password segura).
-    - Validación de CBU (longitud exacta y contenido) y Alias bancario.
-    - Estrategia *Zero-Trust*: Las entidades se autovalidan en el constructor mediante métodos privados.
-- **Gestión de Errores:** Jerarquía de excepciones propia (`DomainException`) y centralización de mensajes.
+Se ha finalizado la implementación de la capa de Dominio, logrando un **Rich Domain Model** (Modelo de Dominio Rico) totalmente desacoplado y autovalidado.
+
+**Entidades Implementadas:**
+- **User & Account:** Validación estricta de formatos, edad y consistencia de datos.
+- **Transfer:** Implementación de **Máquina de Estados** (Pending -> Completed/Failed) para garantizar la integridad transaccional.
+- **Card:** Validación algorítmica (**Luhn Algorithm**), control de fechas de vencimiento y lógica de activación.
+
+**Características de Arquitectura:**
+- **Inmutabilidad:** Se eliminaron los `Setters` públicos. El estado solo cambia a través de métodos de negocio (`deposit`, `activate`, `markAsCompleted`).
+- **Seguridad JPA:** Constructores vacíos protegidos (`protected`) para impedir la creación de objetos inválidos fuera del framework.
+- **Zero-Trust:** Validaciones exhaustivas en el constructor. No existen objetos "a medio llenar" en memoria.
 
 **🚀 Próximos Pasos Inmediatos:**
-1. **Ampliación del Dominio:** Definición del Núcleo Transaccional (**Transferencias** y **Tarjetas**).
-2. **Infraestructura:** Definición de Puertos (Interfaces) e implementación de Adaptadores de Persistencia (JPA).
+1. **Puertos (Ports):** Definición de interfaces para Repositorios (`UserRepository`, `AccountRepository`).
+2. **Adaptadores (Adapters):** Implementación de la persistencia con Spring Data JPA.
 
 © 2026 - Desarrollado por Genaro Rotstein
 

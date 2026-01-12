@@ -2,9 +2,9 @@ package com.homebanking.domain.entity;
 
 import com.homebanking.domain.exception.InvalidUserDataException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,8 +12,7 @@ import java.time.Period;
 import java.util.regex.Pattern;
 
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
     public static final int MIN_LEGAL_AGE = 18;
@@ -23,7 +22,6 @@ public class User {
     private static final String EMAIL_REGEX = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
     private static final String DNI_REGEX = "^\\d+$";
     private static final String NAME_REGEX = "^[a-zA-ZÀ-ÿ\\u00f1\\u00d1\\s]+$";
-
 
     private Long id;
     private String email;
@@ -44,7 +42,6 @@ public class User {
         validatePasswordFormat(password);
         validateAge(birthDate);
 
-
         this.id = id;
         this.email = email;
         this.password = password;
@@ -56,31 +53,44 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
+    // --- MÉTODOS DE NEGOCIO (Mutators Controlados) ---
 
+    public void changePassword(String newPassword) {
+        validateNonBlankField(newPassword, DomainErrorMessages.PASSWORD_REQUIRED);
+        validatePasswordFormat(newPassword);
+        this.password = newPassword;
+    }
 
-    private void validateMandatoryFields(String name, String lastName, String email, String password, String dni, String address) {
-        if (name == null || name.isBlank() ||
-                lastName == null || lastName.isBlank() ||
-                email == null || email.isBlank() ||
-                password == null || password.isBlank() ||
-                dni == null || dni.isBlank() ||
-                address == null || address.isBlank()) {
+    public void changeAddress(String newAddress) {
+        validateNonBlankField(newAddress, DomainErrorMessages.ADDRESS_REQUIRED);
+        this.address = newAddress;
+    }
 
-            throw new InvalidUserDataException(DomainErrorMessages.MANDATORY_FIELDS);
+    // --- MÉTODOS DE VALIDACIÓN (Private) ---
+
+    private void validateNonBlankField(String value, String errorMessage) {
+        if (value == null || value.isBlank()) {
+            throw new InvalidUserDataException(errorMessage);
         }
     }
 
+    private void validateMandatoryFields(String name, String lastName, String email, String password, String dni, String address) {
+        validateNonBlankField(name, DomainErrorMessages.MANDATORY_FIELDS);
+        validateNonBlankField(lastName, DomainErrorMessages.MANDATORY_FIELDS);
+        validateNonBlankField(email, DomainErrorMessages.MANDATORY_FIELDS);
+        validateNonBlankField(password, DomainErrorMessages.MANDATORY_FIELDS);
+        validateNonBlankField(dni, DomainErrorMessages.MANDATORY_FIELDS);
+        validateNonBlankField(address, DomainErrorMessages.MANDATORY_FIELDS);
+    }
+
     private void validateDniFormat(String dni) {
-        // 1. Longitud
         if (dni.length() < DNI_MIN_LENGTH) {
             throw new InvalidUserDataException(DomainErrorMessages.DNI_INVALID);
         }
-        // 2. Solo números (Regex)
         if (!Pattern.matches(DNI_REGEX, dni)) {
             throw new InvalidUserDataException(DomainErrorMessages.INVALID_DNI_FORMAT);
         }
     }
-
 
     private void validateNameFormat(String name, String lastName) {
         if (!Pattern.matches(NAME_REGEX, name) || !Pattern.matches(NAME_REGEX, lastName)) {

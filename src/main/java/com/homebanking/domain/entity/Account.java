@@ -2,6 +2,7 @@ package com.homebanking.domain.entity;
 
 import com.homebanking.domain.exception.InvalidAccountDataException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,16 +12,13 @@ import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account {
 
-    // --- CONSTANTES DE NEGOCIO ---
+
     public static final int CBU_LENGTH = 22;
-    // Alias: Entre 6 y 20 caracteres. Letras, números y puntos.
-    // Explicación Regex: ^[a-zA-Z0-9.]{6,20}$
     private static final String ALIAS_REGEX = "^[a-zA-Z0-9.]{6,20}$";
-    private static final String CBU_REGEX = "^\\d+$"; // Solo números
+    private static final String CBU_REGEX = "^\\d+$";
 
     private Long id;
     private Long userId;
@@ -30,13 +28,13 @@ public class Account {
     private LocalDateTime createdAt;
 
     public Account(Long id, Long userId, String cbu, String alias, BigDecimal balance) {
-        // 1. Validaciones
+
         validateMandatoryFields(userId, cbu, alias, balance);
         validateCbuFormat(cbu);
         validateAliasFormat(alias);
         validateBalance(balance);
 
-        // 2. Asignaciones
+
         this.id = id;
         this.userId = userId;
         this.cbu = cbu;
@@ -44,24 +42,50 @@ public class Account {
         this.balance = balance;
         this.createdAt = LocalDateTime.now();
     }
+    public void deposit(BigDecimal amount) {
+        validatePositiveAmount(amount, DomainErrorMessages.DEPOSIT_AMOUNT_MUST_BE_POSITIVE);
+        BigDecimal newBalance = this.balance.add(amount);
+        validateBalance(newBalance);
+        this.balance = newBalance;
+    }
 
-    // --- MÉTODOS PRIVADOS ---
+    public void debit(BigDecimal amount) {
+        validatePositiveAmount(amount, DomainErrorMessages.DEBIT_AMOUNT_MUST_BE_POSITIVE);
+        BigDecimal newBalance = this.balance.subtract(amount);
+        validateBalance(newBalance);
+        this.balance = newBalance;
+    }
+
+    private void validateNonBlankField(String value, String errorMessage) {
+        if (value == null || value.isBlank()) {
+            throw new InvalidAccountDataException(errorMessage);
+        }
+    }
+
+    private void validatePositiveAmount(BigDecimal amount, String errorMessage) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAccountDataException(errorMessage);
+        }
+    }
+
 
     private void validateMandatoryFields(Long userId, String cbu, String alias, BigDecimal balance) {
-        if (userId == null ||
-                cbu == null || cbu.isBlank() ||
-                alias == null || alias.isBlank() ||
-                balance == null) {
-            throw new InvalidAccountDataException(DomainErrorMessages.ACCOUNT_MANDATORY_FIELDS);
+        if (userId == null) {
+            throw new InvalidAccountDataException(DomainErrorMessages.USER_ID_REQUIRED);
+        }
+        validateNonBlankField(cbu, DomainErrorMessages.CBU_REQUIRED);
+        validateNonBlankField(alias, DomainErrorMessages.ALIAS_REQUIRED);
+        if (balance == null) {
+            throw new InvalidAccountDataException(DomainErrorMessages.BALANCE_REQUIRED);
         }
     }
 
     private void validateCbuFormat(String cbu) {
-        // Validación 1: Solo números
+
         if (!Pattern.matches(CBU_REGEX, cbu)) {
             throw new InvalidAccountDataException(DomainErrorMessages.CBU_ONLY_NUMBERS);
         }
-        // Validación 2: Longitud exacta
+
         if (cbu.length() != CBU_LENGTH) {
             throw new InvalidAccountDataException(DomainErrorMessages.CBU_INVALID_LENGTH);
         }

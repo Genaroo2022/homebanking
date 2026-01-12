@@ -95,3 +95,15 @@ Las excepciones lanzadas en el dominio (`domain/exception`) son capturadas por u
 
 ### Módulos Externos y Auditoría
 Los servicios como "Pagos" o "Auditoría" se tratan como adaptadores externos en adapter/out/external. Esto permite que, si mañana cambiamos el proveedor de pagos, solo se toque el adaptador correspondiente sin modificar ni una línea del caso de uso.
+
+### Encapsulamiento y Mutabilidad
+Opté por un diseño de **Entidades Ricas** en contraposición al antipatrón de "Entidades Anémicas":
+1.  **Eliminación de Setters:** Se han eliminado los métodos `set()` públicos. La mutabilidad es intencional y semántica.
+    * *Incorrecto:* `account.setBalance(newBalance)`
+    * *Correcto:* `account.deposit(amount)` o `account.debit(amount)`
+2.  **Transiciones de Estado:** Entidades como `Transfer` poseen lógica de "Guard Clauses" para impedir cambios de estado ilegales (ej: no se puede cancelar una transferencia ya completada).
+
+### Seguridad en la Instanciación
+Para conciliar la seguridad del Dominio con los requisitos de JPA/Hibernate:
+* **Constructores Públicos:** Son los únicos expuestos al código cliente. Exigen todos los datos obligatorios y ejecutan validaciones estrictas.
+* **Constructores Protegidos:** Se utiliza `@NoArgsConstructor(access = AccessLevel.PROTECTED)`. Esto permite que Hibernate instancie la clase mediante reflexión, pero impide que un desarrollador cree objetos vacíos o inválidos por error.
