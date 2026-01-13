@@ -126,29 +126,35 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
+**Probar el Endpoint de Registro:**
+* **URL:** `http://localhost:8080/users`
+* **Method:** `POST`
+* **Body Example:**
+```json
+{
+  "name": "Lionel",
+  "lastName": "Messi",
+  "email": "lio@messi.com",
+  "password": "SecurePass123!",
+  "dni": "10101010",
+  "birthDate": "1987-06-24",
+  "address": "Miami, USA"
+}
+```
 
 ## 🤝 Contribución y Estado del Proyecto ##
 
-## 🤝 Estado del Proyecto
+El proyecto avanza por "Vertical Slices" funcionales.
 
-🟢 **Fase 1: Núcleo de Dominio (COMPLETO)**
+| Módulo | Funcionalidad | Estado | Endpoint |
+| :--- | :--- | :--- | :--- |
+| **Identity** | Registro de Usuario & Validaciones | ✅ **Production Ready** | `POST /users` |
+| **Security** | Autenticación JWT & Roles | 🚧 En Progreso | `POST /auth/login` |
+| **Accounts** | Gestión de Cuentas (CBU/Alias) | ⏳ Pendiente | `POST /accounts` |
+| **Payments** | Transferencias Atómicas (ACID) | ⏳ Pendiente | `POST /transfers` |
+| **Cards** | Emisión y Lógica de Luhn | ⏳ Pendiente | `POST /cards` |
 
-Se ha finalizado la implementación de la capa de Dominio, logrando un **Rich Domain Model** (Modelo de Dominio Rico) totalmente desacoplado y autovalidado.
-
-**Entidades Implementadas:**
-- **User & Account:** Validación estricta de formatos, edad y consistencia de datos.
-- **Transfer:** Implementación de **Máquina de Estados** (Pending -> Completed/Failed) para garantizar la integridad transaccional.
-- **Card:** Validación algorítmica (**Luhn Algorithm**), control de fechas de vencimiento y lógica de activación.
-
-**Características de Arquitectura:**
-- **Inmutabilidad:** Se eliminaron los `Setters` públicos. El estado solo cambia a través de métodos de negocio (`deposit`, `activate`, `markAsCompleted`).
-- **Seguridad JPA:** Constructores vacíos protegidos (`protected`) para impedir la creación de objetos inválidos fuera del framework.
-- **Zero-Trust:** Validaciones exhaustivas en el constructor. No existen objetos "a medio llenar" en memoria.
-
-**🚀 Próximos Pasos Inmediatos:**
-1. **Puertos (Ports):** Definición de interfaces para Repositorios (`UserRepository`, `AccountRepository`).
-2. **Adaptadores (Adapters):** Implementación de la persistencia con Spring Data JPA.
-
-© 2026 - Desarrollado por Genaro Rotstein
+© 2026 - **Genaro Rotstein** | *Software Engineer*
 
 📖 Para detalles técnicos profundos, ver [Documentación de Arquitectura](docs/ARCHITECTURE.md)
+

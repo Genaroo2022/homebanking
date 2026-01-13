@@ -31,6 +31,7 @@ public final class DomainErrorMessages {
 
     // USER -> Age validation
     public static final String USER_UNDERAGE = "El usuario debe ser mayor de 18 años";
+    public static final String USER_OVER_MAX_AGE = "La edad del usuario no es válida (máximo 130 años)";
     public static final String BIRTHDATE_REQUIRED = "La fecha de nacimiento es obligatoria";
 
     // USER -> Format validations
@@ -38,6 +39,7 @@ public final class DomainErrorMessages {
     public static final String INVALID_DNI_FORMAT = "El DNI debe contener solo números";
     public static final String INVALID_NAME_FORMAT = "El nombre y apellido solo pueden contener letras";
     public static final String DNI_INVALID = "El DNI debe tener al menos 7 dígitos";
+    public static final String DNI_TOO_LONG = "El DNI no puede exceder 20 dígitos";
     public static final String PASSWORD_FORMAT = "La contraseña debe tener al menos 8 caracteres";
 
     // USER -> Required fields
@@ -47,6 +49,12 @@ public final class DomainErrorMessages {
 
     // USER -> Uniqueness constraints
     public static final String DNI_ALREADY_EXISTS = "El DNI ingresado ya existe en el sistema";
+    public static final String EMAIL_ALREADY_EXISTS = "El email ingresado ya existe en el sistema";
+
+    // USER -> Reconstitution Validations ---
+    public static final String ID_REQUIRED = "La identidad (ID) es obligatoria al reconstruir el usuario";
+    public static final String CREATED_AT_REQUIRED = "La fecha de creación es obligatoria";
+
 
     // --- TRANSFER MESSAGES ---
 
@@ -82,4 +90,6 @@ public final class DomainErrorMessages {
     // CARD -> State validation
     public static final String CARD_ALREADY_ACTIVE = "La tarjeta ya está activa";
     public static final String CARD_ALREADY_INACTIVE = "La tarjeta ya está inactiva";
+
+
 }

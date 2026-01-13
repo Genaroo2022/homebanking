@@ -1,3 +1,7 @@
+**Cambios principales:**
+* Se agregó la sección **Manejo Centralizado de Errores**.
+* Se actualizó la estructura para incluir `adapter/in/web/exception`.
+
 # 🏛️ Arquitectura del Sistema
 
 🚧 Nota de Estado: Este proyecto se encuentra en su fase fundacional. La estructura de directorios y este documento de arquitectura representan el diseño técnico que guiará la implementación.
@@ -12,7 +16,7 @@ Este proyecto implementa una **Arquitectura Hexagonal** (Ports & Adapters) estri
 
 ---
 
-## 📂 Organización del Código
+## 📂 Organización del Código (Actualizado)
 
 La estructura de carpetas es semántica y refleja la inversión de dependencias. A continuación se detalla la responsabilidad de cada módulo:
 
@@ -21,7 +25,6 @@ Es el corazón del software. No tiene dependencias externas ni de frameworks.
 * **`entity/`**: Objetos de negocio con comportamiento y validación (ej. `Account`, `User`). Siguen el principio de **Entidades Ricas**.
 * **`exception/`**: Excepciones de negocio (ej. `InvalidUserDataException`), desacopladas de códigos HTTP.
 * **`util/`**: Constantes y reglas de negocio compartidas (ej. `DomainErrorMessages`). Permite evitar "Magic Strings" y centralizar textos de error.
-* **`service/`**: Lógica de dominio pura que orquesta interacciones entre múltiples entidades (a implementar).
 * **`service/`**: Lógica de dominio pura que orquesta interacciones entre múltiples entidades (a implementar).
 
 ### 2. Application Layer (`src/main/java/com/homebanking/application`)
@@ -40,6 +43,8 @@ Implementación técnica de los puertos. Aquí reside la dependencia con framewo
 
 #### 🔹 Adapters In (Driving)
 * **`web/controller`**: Controladores REST que reciben peticiones HTTP.
+* **`web/request`**: DTOs específicos de la capa Web (JSON bodies) con validaciones de formato (@Valid, @NotBlank).
+* **`web/exception`**: Global Exception Handler (@RestControllerAdvice). Intercepta excepciones de dominio y validación para traducirlas a códigos HTTP semánticos (400, 409, 500).
 * **`web/filter`**: Filtros de seguridad (JWT) y CORS.
 * **`web/mapper`**: Conversión de DTOs Web a Objetos de Dominio.
 * **`event/`**: Adaptador para comunicación asíncrona.
@@ -107,3 +112,34 @@ Opté por un diseño de **Entidades Ricas** en contraposición al antipatrón de
 Para conciliar la seguridad del Dominio con los requisitos de JPA/Hibernate:
 * **Constructores Públicos:** Son los únicos expuestos al código cliente. Exigen todos los datos obligatorios y ejecutan validaciones estrictas.
 * **Constructores Protegidos:** Se utiliza `@NoArgsConstructor(access = AccessLevel.PROTECTED)`. Esto permite que Hibernate instancie la clase mediante reflexión, pero impide que un desarrollador cree objetos vacíos o inválidos por error.
+
+### Manejo Centralizado de Errores (Global Exception Handler)
+Se ha implementado un patrón `RestControllerAdvice` para interceptar excepciones en toda la aplicación y traducirlas a respuestas JSON estandarizadas. Esto evita exponer trazas de error (Stack Traces) al cliente.
+
+**Estrategia de Mapeo HTTP:**
+* **400 Bad Request:**
+    * Errores de validación de sintaxis (`@Valid`, `MethodArgumentNotValidException`).
+    * Errores de reglas de dominio simples (ej: `InvalidUserDataException` por minoría de edad).
+* **409 Conflict:**
+    * Errores de estado o duplicidad (ej: `UserAlreadyExistsException` cuando el DNI o Email ya existen).
+* **500 Internal Server Error:**
+    * Excepciones no controladas (`Exception.class`), como red de seguridad final.
+
+###  Transaccionalidad y OSIV (Open Session In View)
+**Decisión:** Se ha deshabilitado explícitamente `spring.jpa.open-in-view=false`.
+
+**Justificación:**
+* Evita consultas "fantasma" a la base de datos durante la serialización del JSON en el Controlador (Lazy Loading fuera de transacción).
+* Fuerza a que toda la carga de datos necesaria ocurra dentro de los límites transaccionales del Caso de Uso (`UseCase`).
+* Mejora el rendimiento de la conexión a la base de datos al liberarla antes.
+
+###  Estrategia de Validación
+* **Capa Web (DTO):** Validaciones de formato y presencia (`@NotBlank`, `@Email`) usando Jakarta Validation. Fail-fast antes de tocar el dominio.
+* **Capa Dominio (Entidad):** Validaciones de negocio e integridad (ej: edad mínima, algoritmo de tarjeta) en el constructor de la entidad.
+
+### Separación de Modelos
+No compartimos clases entre capas. Usamos Mappers (`MapStruct` / Manuales) para traducir:
+* `RegisterUserRequest` (JSON) ➡️ `User` (Dominio)
+* `User` (Dominio) ➡️ `UserEntity` (Base de Datos)
+
+---

@@ -29,16 +29,12 @@ public class Card {
     private CardColor color;
     private boolean active;
 
-    public Card(Long id, Long accountId, String number, String cvv, String cardHolder,
+    // To create a new card (without ID)
+    public Card(Long accountId, String number, String cvv, String cardHolder,
                 LocalDate fromDate, LocalDate thruDate, CardType type, CardColor color) {
 
-        validateAccount(accountId);
-        validateNumber(number);
-        validateCvv(cvv);
-        validateCardHolder(cardHolder);
-        validateDates(fromDate, thruDate);
+        validateCardData(accountId, number, cvv, cardHolder, fromDate, thruDate, type, color);
 
-        this.id = id;
         this.accountId = accountId;
         this.number = number;
         this.cvv = cvv;
@@ -48,6 +44,29 @@ public class Card {
         this.type = type;
         this.color = color;
         this.active = true;
+    }
+
+    // Factory Method: Reconstitution from Persistence
+    public static Card withId(Long id, Long accountId, String number, String cvv, String cardHolder,
+                              LocalDate fromDate, LocalDate thruDate, CardType type, CardColor color, boolean active) {
+        validateStructuralData(id);
+        validateCardData(accountId, number, cvv, cardHolder, fromDate, thruDate, type, color);
+        return hydrate(id, accountId, number, cvv, cardHolder, fromDate, thruDate, type, color, active);
+    }
+    private static Card hydrate(Long id, Long accountId, String number, String cvv, String cardHolder,
+                                LocalDate fromDate, LocalDate thruDate, CardType type, CardColor color, boolean active) {
+        Card card = new Card();
+        card.id = id;
+        card.accountId = accountId;
+        card.number = number;
+        card.cvv = cvv;
+        card.cardHolder = cardHolder.toUpperCase();
+        card.fromDate = fromDate;
+        card.thruDate = thruDate;
+        card.type = type;
+        card.color = color;
+        card.active = active;
+        return card;
     }
 
     // --- BUSINESS METHODS ---
@@ -73,21 +92,36 @@ public class Card {
         this.active = false;
     }
 
-    // --- VALIDATIONS ---
+    // --- VALIDATIONS (Private Static) ---
 
-    private void validateAccount(Long accountId) {
+    private static void validateStructuralData(Long id) {
+        if (id == null) {
+            throw new InvalidCardDataException(DomainErrorMessages.ID_REQUIRED);
+        }
+    }
+
+    private static void validateCardData(Long accountId, String number, String cvv, String cardHolder,
+                                         LocalDate fromDate, LocalDate thruDate, CardType type, CardColor color) {
+        validateAccount(accountId);
+        validateNumber(number);
+        validateCvv(cvv);
+        validateCardHolder(cardHolder);
+        validateDates(fromDate, thruDate);
+    }
+
+    private static void validateAccount(Long accountId) {
         if (accountId == null || accountId <= 0) {
             throw new InvalidCardDataException(DomainErrorMessages.CARD_ACCOUNT_REQUIRED);
         }
     }
 
-    private void validateNumber(String number) {
+    private static void validateNumber(String number) {
         if (number == null || !NUMBER_PATTERN.matcher(number).matches() || !isLuhnValid(number)) {
             throw new InvalidCardDataException(DomainErrorMessages.CARD_NUMBER_INVALID);
         }
     }
 
-    private boolean isLuhnValid(String cardNumber) {
+    private static boolean isLuhnValid(String cardNumber) {
         int sum = 0;
         boolean alternate = false;
         for (int i = cardNumber.length() - 1; i >= 0; i--) {
@@ -104,19 +138,19 @@ public class Card {
         return (sum % 10 == 0);
     }
 
-    private void validateCvv(String cvv) {
+    private static void validateCvv(String cvv) {
         if (cvv == null || !CVV_PATTERN.matcher(cvv).matches()) {
             throw new InvalidCardDataException(DomainErrorMessages.CARD_CVV_INVALID);
         }
     }
 
-    private void validateCardHolder(String cardHolder) {
+    private static void validateCardHolder(String cardHolder) {
         if (cardHolder == null || cardHolder.isBlank()) {
             throw new InvalidCardDataException(DomainErrorMessages.CARD_HOLDER_REQUIRED);
         }
     }
 
-    private void validateDates(LocalDate from, LocalDate thru) {
+    private static void validateDates(LocalDate from, LocalDate thru) {
         if (from == null || thru == null) {
             throw new InvalidCardDataException(DomainErrorMessages.CARD_DATES_REQUIRED);
         }
