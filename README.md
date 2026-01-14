@@ -78,6 +78,20 @@ El diseño actual contempla la implementación modular de las siguientes caracte
 
 Sigue estos pasos para levantar el entorno de desarrollo:
 
+## 📋 Prerrequisitos
+
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
+
+- **Java JDK 21 o superior**
+- **Java correctamente configurado en el PATH**
+
+Puedes verificarlo ejecutando:
+
+```bash
+java -version
+```
+**-Una vez realizada la verificación, entonces:**
+
 **1. Clonar el repositorio**
 ```bash
 git clone [https://github.com/Genaroo2022/homebanking.git](https://github.com/Genaroo2022/homebanking.git)
@@ -146,13 +160,13 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 
 El proyecto avanza por "Vertical Slices" funcionales.
 
-| Módulo | Funcionalidad | Estado | Endpoint |
-| :--- | :--- | :--- | :--- |
-| **Identity** | Registro de Usuario & Validaciones | ✅ **Production Ready** | `POST /users` |
-| **Security** | Autenticación JWT & Roles | 🚧 En Progreso | `POST /auth/login` |
-| **Accounts** | Gestión de Cuentas (CBU/Alias) | ⏳ Pendiente | `POST /accounts` |
-| **Payments** | Transferencias Atómicas (ACID) | ⏳ Pendiente | `POST /transfers` |
-| **Cards** | Emisión y Lógica de Luhn | ⏳ Pendiente | `POST /cards` |
+| Módulo | Funcionalidad | Estado                                                                      | Endpoint |
+| :--- | :--- |:----------------------------------------------------------------------------| :--- |
+| **Identity** | Registro de Usuario & Validaciones | ✅ **Production Ready**                                                      | `POST /users` |
+| **Security** | Autenticación JWT & Roles | ✅ **Production Ready**                                                      | `POST /auth/login` |
+| **Accounts** | Gestión de Cuentas (CBU/Alias) | 🚧 Core Implemented                                                         | `POST /accounts` |
+| **Payments** | Transferencias Atómicas (ACID) | 🚧 Core Implemented                                                         | `POST /transfers` |
+| **Cards** | Emisión y Lógica de Luhn | 🚧 Core Implemented                                                                          | `POST /cards` |
 
 © 2026 - **Genaro Rotstein** | *Software Engineer*
 

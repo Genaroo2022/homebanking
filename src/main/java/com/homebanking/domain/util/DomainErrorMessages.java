@@ -55,6 +55,10 @@ public final class DomainErrorMessages {
     public static final String ID_REQUIRED = "La identidad (ID) es obligatoria al reconstruir el usuario";
     public static final String CREATED_AT_REQUIRED = "La fecha de creación es obligatoria";
 
+    // USER -> Authentication
+    public static final String INVALID_CREDENTIALS = "Credenciales inválidas";
+    public static final String USER_NOT_FOUND = "Usuario no encontrado";
+
 
     // --- TRANSFER MESSAGES ---
 

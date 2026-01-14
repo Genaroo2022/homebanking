@@ -1,26 +1,25 @@
 package com.homebanking.application.usecase;
 
 import com.homebanking.domain.entity.User;
-import com.homebanking.domain.exception.InvalidUserDataException;
 import com.homebanking.domain.exception.UserAlreadyExistsException;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.out.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
 public class RegisterUserUseCase {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public RegisterUserUseCase(UserRepository userRepository) {
+    public RegisterUserUseCase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User register(User user) {
-        // NOTE: For now, validation logic is kept here for simplicity (KISS).
-        // If validation rules grow complex, extract to a separate UserValidator strategy.
 
-        // 1. Buscamos si existe
         Optional<User> existingUserOpt = userRepository.findByEmailOrDni(user.getEmail(), user.getDni());
 
         if (existingUserOpt.isPresent()) {
@@ -34,8 +33,9 @@ public class RegisterUserUseCase {
                 throw new UserAlreadyExistsException(DomainErrorMessages.DNI_ALREADY_EXISTS);
             }
         }
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.changePassword(encodedPassword);
 
-        // 3. Si no existe, guardamos
         return userRepository.save(user);
     }
 }

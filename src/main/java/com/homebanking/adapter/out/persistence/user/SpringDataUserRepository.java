@@ -8,9 +8,6 @@ import java.util.Optional;
 @Repository
 interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
 
-    // MAGIA DE SPRING DATA ✨
-    // Al escribir "findByEmailOrDni", Spring analiza los atributos de tu UserJpaEntity
-    // y genera automáticamente el SQL:
-    // SELECT * FROM users WHERE email = ? OR dni = ?
     Optional<UserJpaEntity> findByEmailOrDni(String email, String dni);
+    Optional<UserJpaEntity> findByEmail(String email);
 }

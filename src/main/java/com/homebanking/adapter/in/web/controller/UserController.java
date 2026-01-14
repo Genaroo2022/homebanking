@@ -13,24 +13,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController // Indica a Spring que esta clase maneja peticiones HTTP
-@RequestMapping("/users") // Ruta base: todas las peticiones aquí empiezan con /users
-@RequiredArgsConstructor // Inyección de dependencias automática
+@RestController
+@RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final UserWebMapper userWebMapper;
 
-    @PostMapping // Maneja peticiones POST a /users
+    @PostMapping
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterUserRequest request) {
 
-        // 1. Convertimos el JSON (Request) a Dominio (User)
         User user = userWebMapper.toDomain(request);
 
-        // 2. Ejecutamos la lógica de negocio
         registerUserUseCase.register(user);
 
-        // 3. Devolvemos respuesta 201 Created (Éxito)
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

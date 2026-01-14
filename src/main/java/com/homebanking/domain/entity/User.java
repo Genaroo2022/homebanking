@@ -48,14 +48,14 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Factory Method: Reconstitución desde Persistencia
+    // Factory Method: Reconstitution from Persistence
     public static User withId(Long id, String email, String password, String name, String lastName, String dni, LocalDate birthDate, String address, LocalDateTime createdAt) {
         validateStructuralData(id, createdAt);
         validateUserData(email, password, name, lastName, dni, birthDate, address);
         return hydrate(id, email, password, name, lastName, dni, birthDate, address, createdAt);
     }
 
-    // --- MÉTODOS DE NEGOCIO (Mutators Controlados) ---
+    // --- BUSINESS METHODS (Mutators Controlados) ---
 
     public void changePassword(String newPassword) {
         validateNonBlankField(newPassword, DomainErrorMessages.PASSWORD_REQUIRED);
@@ -68,7 +68,7 @@ public class User {
         this.address = newAddress;
     }
 
-    // --- MÉTODOS DE VALIDACIÓN (Private Static) ---
+    // --- VALIDATION METHODS (Private Static) ---
 
     private static void validateUserData(String email, String password, String name, String lastName, String dni, LocalDate birthDate, String address) {
         validateMandatoryFields(name, lastName, email, password, dni, address);

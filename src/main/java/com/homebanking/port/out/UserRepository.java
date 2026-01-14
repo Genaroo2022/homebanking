@@ -7,7 +7,6 @@ public interface UserRepository {
 
     User save(User user);
 
-    // Optimización: Buscamos por cualquiera de los dos campos únicos
-    // Nota: Esto devolverá un usuario si CUALQUIERA de los dos coincide.
+    Optional<User> findByEmail(String email);
     Optional<User> findByEmailOrDni(String email, String dni);
 }

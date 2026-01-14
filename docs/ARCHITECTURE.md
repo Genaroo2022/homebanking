@@ -108,10 +108,10 @@ Opté por un diseño de **Entidades Ricas** en contraposición al antipatrón de
     * *Correcto:* `account.deposit(amount)` o `account.debit(amount)`
 2.  **Transiciones de Estado:** Entidades como `Transfer` poseen lógica de "Guard Clauses" para impedir cambios de estado ilegales (ej: no se puede cancelar una transferencia ya completada).
 
-### Seguridad en la Instanciación
-Para conciliar la seguridad del Dominio con los requisitos de JPA/Hibernate:
-* **Constructores Públicos:** Son los únicos expuestos al código cliente. Exigen todos los datos obligatorios y ejecutan validaciones estrictas.
-* **Constructores Protegidos:** Se utiliza `@NoArgsConstructor(access = AccessLevel.PROTECTED)`. Esto permite que Hibernate instancie la clase mediante reflexión, pero impide que un desarrollador cree objetos vacíos o inválidos por error.
+### Seguridad y Autenticación
+* **Stateless:** Se utiliza **JWT (JSON Web Tokens)** para la autenticación. El servidor no mantiene sesión.
+* **Filtros:** Se implementó un `JwtAuthenticationFilter` personalizado que intercepta las peticiones y valida la firma del token antes de llegar al dominio.
+* **User Details:** Adaptador `CustomUserDetailsService` que conecta la seguridad de Spring con nuestro puerto de repositorio `UserRepository`.
 
 ### Manejo Centralizado de Errores (Global Exception Handler)
 Se ha implementado un patrón `RestControllerAdvice` para interceptar excepciones en toda la aplicación y traducirlas a respuestas JSON estandarizadas. Esto evita exponer trazas de error (Stack Traces) al cliente.
@@ -127,6 +127,7 @@ Se ha implementado un patrón `RestControllerAdvice` para interceptar excepcione
 
 ###  Transaccionalidad y OSIV (Open Session In View)
 **Decisión:** Se ha deshabilitado explícitamente `spring.jpa.open-in-view=false`.
+Se utiliza `@Transactional` a nivel de **Caso de Uso** (Application Layer) para garantizar la atomicidad de operaciones complejas como las transferencias (Debitar origen + Acreditar destino o fallar todo).
 
 **Justificación:**
 * Evita consultas "fantasma" a la base de datos durante la serialización del JSON en el Controlador (Lazy Loading fuera de transacción).

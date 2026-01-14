@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // Para Hibernate
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class UserJpaEntity {
 
     public static final int DNI_MAX_LENGTH = 20;
@@ -39,7 +39,6 @@ class UserJpaEntity {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    // Constructor to create new entities (without ID, it is assigned by the database)
     public UserJpaEntity(String name, String lastName, String email, String password,
                          String dni, LocalDate birthDate, String address, LocalDateTime createdAt) {
         this.name = name;
@@ -52,7 +51,6 @@ class UserJpaEntity {
         this.createdAt = createdAt;
     }
 
-    // Factory method for reconstitution from the database (with ID)
     public static UserJpaEntity withId(Long id, String name, String lastName, String email, String password,
                                        String dni, LocalDate birthDate, String address, LocalDateTime createdAt) {
         UserJpaEntity entity = new UserJpaEntity(name, lastName, email, password, dni, birthDate, address, createdAt);
