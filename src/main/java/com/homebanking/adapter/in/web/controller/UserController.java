@@ -22,12 +22,12 @@ public class UserController {
     private final UserWebMapper userWebMapper;
 
     @PostMapping
-    public ResponseEntity<Void> register(@Valid @RequestBody RegisterUserRequest request) {
+    public ResponseEntity<Object> register(@Valid @RequestBody RegisterUserRequest request) {
 
         User user = userWebMapper.toDomain(request);
+        User createdUser = registerUserUseCase.register(user);
 
-        registerUserUseCase.register(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(java.util.Map.of("id", createdUser.getId()));    }
 }

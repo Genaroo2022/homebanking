@@ -22,6 +22,8 @@ public final class DomainErrorMessages {
     public static final String ALIAS_REQUIRED = "El alias es obligatorio";
     public static final String BALANCE_REQUIRED = "El saldo es obligatorio";
     public static final String ACCOUNT_MANDATORY_FIELDS = "Todos los campos de la cuenta son obligatorios (Usuario, CBU, Alias, Saldo)";
+    public static final String USER_ID_INVALID = "El ID de usuario debe ser mayor a cero";
+
 
     // ACCOUNT -> Amount validations
     public static final String DEPOSIT_AMOUNT_MUST_BE_POSITIVE = "El monto a depositar debe ser mayor a cero";

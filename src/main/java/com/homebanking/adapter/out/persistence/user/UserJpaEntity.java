@@ -14,6 +14,7 @@ class UserJpaEntity {
 
     public static final int DNI_MAX_LENGTH = 20;
 
+    @Setter(AccessLevel.PACKAGE)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -49,12 +50,5 @@ class UserJpaEntity {
         this.birthDate = birthDate;
         this.address = address;
         this.createdAt = createdAt;
-    }
-
-    public static UserJpaEntity withId(Long id, String name, String lastName, String email, String password,
-                                       String dni, LocalDate birthDate, String address, LocalDateTime createdAt) {
-        UserJpaEntity entity = new UserJpaEntity(name, lastName, email, password, dni, birthDate, address, createdAt);
-        entity.id = id;
-        return entity;
     }
 }

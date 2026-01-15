@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 class UserMapper {
 
     UserJpaEntity toJpaEntity(User user) {
-        return new UserJpaEntity(
+        UserJpaEntity entity = new UserJpaEntity(
                 user.getName(),
                 user.getLastName(),
                 user.getEmail(),
@@ -17,20 +17,12 @@ class UserMapper {
                 user.getAddress(),
                 user.getCreatedAt()
         );
-    }
 
-    UserJpaEntity toJpaEntityWithId(User user) {
-        return UserJpaEntity.withId(
-                user.getId(),
-                user.getName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getPassword(),
-                user.getDni(),
-                user.getBirthDate(),
-                user.getAddress(),
-                user.getCreatedAt()
-        );
+        if (user.getId() != null) {
+            entity.setId(user.getId());
+        }
+
+        return entity;
     }
 
     public User toDomainEntity(UserJpaEntity entity) {

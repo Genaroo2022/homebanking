@@ -125,22 +125,21 @@ Se ha implementado un patrón `RestControllerAdvice` para interceptar excepcione
 * **500 Internal Server Error:**
     * Excepciones no controladas (`Exception.class`), como red de seguridad final.
 
-###  Transaccionalidad y OSIV (Open Session In View)
-**Decisión:** Se ha deshabilitado explícitamente `spring.jpa.open-in-view=false`.
-Se utiliza `@Transactional` a nivel de **Caso de Uso** (Application Layer) para garantizar la atomicidad de operaciones complejas como las transferencias (Debitar origen + Acreditar destino o fallar todo).
+###  Transaccionalidad y consistencia
+* Se utiliza @Transactional a nivel de Caso de Uso (Application Layer) para garantizar la integridad de los procesos de negocio complejos.
 
-**Justificación:**
-* Evita consultas "fantasma" a la base de datos durante la serialización del JSON en el Controlador (Lazy Loading fuera de transacción).
-* Fuerza a que toda la carga de datos necesaria ocurra dentro de los límites transaccionales del Caso de Uso (`UseCase`).
-* Mejora el rendimiento de la conexión a la base de datos al liberarla antes.
+* Caso de Uso: Registro de Usuario (RegisterUserUseCase) Implementamos una regla de negocio estricta: "Todo Usuario nace con una Cuenta".
+
+* El caso de uso orquesta dos operaciones de escritura:
+
+* Persistencia del User.
+
+* Generación automática de una Account (Caja de Ahorro) vinculada.
+
+* Atomicidad: Si falla la creación de la cuenta (ej. error al generar CBU), el sistema realiza un Rollback automático del usuario. Esto evita el estado inconsistente de "Usuarios Huérfanos" (sin cuenta).
 
 ###  Estrategia de Validación
 * **Capa Web (DTO):** Validaciones de formato y presencia (`@NotBlank`, `@Email`) usando Jakarta Validation. Fail-fast antes de tocar el dominio.
 * **Capa Dominio (Entidad):** Validaciones de negocio e integridad (ej: edad mínima, algoritmo de tarjeta) en el constructor de la entidad.
-
-### Separación de Modelos
-No compartimos clases entre capas. Usamos Mappers (`MapStruct` / Manuales) para traducir:
-* `RegisterUserRequest` (JSON) ➡️ `User` (Dominio)
-* `User` (Dominio) ➡️ `UserEntity` (Base de Datos)
 
 ---

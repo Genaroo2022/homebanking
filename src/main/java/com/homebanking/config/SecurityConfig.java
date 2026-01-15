@@ -21,18 +21,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // Rutas de Negocio
     private static final String USERS_REGISTER = "/users";
     private static final String AUTH_LOGIN = "/auth/login";
 
-    // Rutas de Infraestructura / Documentación (La "Lista Blanca")
+    // Public URLs that do not require authentication
     private static final String[] PUBLIC_URLS = {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",
-            "/webjars/**",
-            "/h2-console/**"
+            "/webjars/**"
     };
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -42,19 +40,20 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
-                    // 1. Permitir endpoints de negocio (Registro y Login)
+                    // 1. Allow business endpoints (Registration and Login)
                     auth.requestMatchers(HttpMethod.POST, USERS_REGISTER).permitAll();
                     auth.requestMatchers(HttpMethod.POST, AUTH_LOGIN).permitAll();
+                    auth.requestMatchers("/h2-console", "/h2-console/**").permitAll();
 
-                    // 2. Permitir toda la lista de URLs públicas (Swagger, H2)
+                    // 2. Allow all public URLs (Swagger, H2)
                     auth.requestMatchers(PUBLIC_URLS).permitAll();
 
-                    // 3. Todo lo demás requiere autenticación
+                    // 3. Everything else requires authentication
                     auth.anyRequest().authenticated();
                 })
-                // Permitir frames para H2 Console
+                // Allow frames for H2 Console
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

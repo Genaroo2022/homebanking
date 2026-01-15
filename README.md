@@ -140,10 +140,16 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
-**Probar el Endpoint de Registro:**
-* **URL:** `http://localhost:8080/users`
-* **Method:** `POST`
-* **Body Example:**
+## 🧪 Guía de Uso de la API
+
+El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
+
+### 1️⃣ Registrar un Usuario (Crea Cuenta Automática)
+> **Nota:** Al registrarse, el sistema genera automáticamente una **Caja de Ahorro** con CBU y Alias únicos.
+
+* **Endpoint:** `POST` `/users`
+* **Body:**
+
 ```json
 {
   "name": "Lionel",
@@ -155,18 +161,58 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
   "address": "Miami, USA"
 }
 ```
+### 2️⃣ Iniciar Sesión (Obtener Token)
+* **Endpoint:** `POST` `/auth` `/login`
+* **Body:**
+
+```json
+
+{
+  "name": "Lionel",
+  "lastName": "Messi",
+  "email": "lio@messi.com",
+  "password": "SecurePass123!",
+  "dni": "10101010",
+  "birthDate": "1987-06-24",
+  "address": "Miami, USA"
+}
+```
+**💡 Respuesta: Recibirás un token JWT. Cópialo para usarlo en el siguiente paso.**
+
+### 3️⃣ Ver Mi Perfil y Cuentas (Endpoint Seguro)
+* **Endpoint:** `GET` `/auth` `/me`
+* **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
+
+
+* **Respuesta Esperada:**
+```json
+{
+"id": 1,
+"email": "lio@messi.com",
+"name": "Lionel",
+"lastName": "Messi",
+"accounts": [
+{
+"id": 1,
+"cbu": "1234567890123456789012",
+"alias": "lionel.messi.123",
+"balance": 0
+}
+]
+}
+```
 
 ## 🤝 Contribución y Estado del Proyecto ##
 
 El proyecto avanza por "Vertical Slices" funcionales.
 
-| Módulo | Funcionalidad | Estado                                                                      | Endpoint |
-| :--- | :--- |:----------------------------------------------------------------------------| :--- |
-| **Identity** | Registro de Usuario & Validaciones | ✅ **Production Ready**                                                      | `POST /users` |
-| **Security** | Autenticación JWT & Roles | ✅ **Production Ready**                                                      | `POST /auth/login` |
-| **Accounts** | Gestión de Cuentas (CBU/Alias) | 🚧 Core Implemented                                                         | `POST /accounts` |
-| **Payments** | Transferencias Atómicas (ACID) | 🚧 Core Implemented                                                         | `POST /transfers` |
-| **Cards** | Emisión y Lógica de Luhn | 🚧 Core Implemented                                                                          | `POST /cards` |
+| Módulo | Funcionalidad                        | Estado                                                                    | Endpoint           |
+| :--- |:-------------------------------------|:--------------------------------------------------------------------------|:-------------------|
+| **Identity** | Registro de Usuario & Validaciones   | ✅ **Production Ready**                                                    | `POST /users`      |
+| **Security** | Autenticación JWT & Stateless        | ✅ **Production Ready**                                                    | `POST /auth/login` |
+| **Accounts** | Persistencia, Relaciones y Consultas | ✅ **Production Ready**                                                                         | `GET /auth/me`                 |
+| **Payments** | Transferencias Atómicas (ACID)       | 🚧 Core Implemented                                                       | `POST /transfers`  |
+| **Cards** | Emisión y Lógica de Luhn             | 🚧 Core Implemented                                                       | `POST /cards`      |
 
 © 2026 - **Genaro Rotstein** | *Software Engineer*
 

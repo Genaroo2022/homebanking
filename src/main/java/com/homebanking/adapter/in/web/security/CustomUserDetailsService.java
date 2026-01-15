@@ -4,6 +4,7 @@ import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
+@NullMarked
 @Service
 @RequiredArgsConstructor
 @Slf4j
