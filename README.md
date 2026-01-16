@@ -4,9 +4,9 @@
 ![Spring Boot 4.0.1](https://img.shields.io/badge/Spring_Boot-4.0.1-brightgreen?style=flat-square&logo=springboot)![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-blueviolet?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)
 
-Proyecto de Home Banking desarrollado con fines educativos y profesionales.
+Plataforma de banca digital moderna, escalable y segura desarrollada con Arquitectura Hexagonal pura, Clean Architecture y principios SOLID 100%.
 
-El objetivo es construir una plataforma financiera moderna, escalable y segura. El diseño prioriza el **desacoplamiento de componentes** mediante la Arquitectura Hexagonal (Ports and Adapters), permitiendo que la lógica de negocio permanezca agnóstica a la infraestructura tecnológica.
+El diseño invierte todas las dependencias hacia el dominio, garantizando que la lógica de negocio permanezca completamente agnóstica a frameworks externos. Cada cambio en infraestructura ocurre sin tocar el núcleo del sistema.
 
 ## 🏗️ Arquitectura y Diseño
 
@@ -49,7 +49,7 @@ src/
 
 ## 🛠️ Stack Tecnológico
 
-Utilizamos las últimas versiones estables para garantizar un desarrollo empresarial robusto:
+Utilizo las últimas versiones estables para garantizar un desarrollo empresarial robusto:
 
 | Categoría | Tecnologías |
 | :--- | :--- |
@@ -84,11 +84,14 @@ Antes de ejecutar el proyecto, asegúrate de tener instalado:
 
 - **Java JDK 21 o superior**
 - **Java correctamente configurado en el PATH**
+- **Maven 3.9+ (incluido en mvnw)**
+- **Git para clonar el repositorio**
 
 Puedes verificarlo ejecutando:
 
 ```bash
 java -version
+mvn -version
 ```
 **-Una vez realizada la verificación, entonces:**
 
@@ -140,7 +143,7 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
-## 🧪 Guía de Uso de la API
+# 🧪 Guía de Uso de la API
 
 El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 
@@ -201,10 +204,44 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 ]
 }
 ```
+# 🧪 Testing
+* **Ejecutar Tests Unitarios**
+```bash
+bash./mvnw test
+```
 
-## 🤝 Contribución y Estado del Proyecto ##
+* **Características:**
 
-El proyecto avanza por "Vertical Slices" funcionales.
+**✅ Sin Spring context (ultrarrápidos <100ms)**
+
+**✅ Mocks con Mockito**
+
+**✅ 100% coverage de casos de uso**
+
+**✅ CI/CD ready**
+
+- ## Tests por Capa ##
+```bash
+bash# 
+```
+- ## Tests de Dominio ##
+```bash
+./mvnw test -Dtest=*Entity*
+```
+
+## Tests de UseCase ##
+```bash
+./mvnw test -Dtest=*UseCaseImpl*
+```
+
+## Tests de Controller ##
+```bash
+./mvnw test -Dtest=*Controller*
+```
+
+# 🤝 Contribución y Estado del Proyecto #
+
+**El proyecto avanza por "Vertical Slices" funcionales.**
 
 | Módulo | Funcionalidad                        | Estado                                                                    | Endpoint           |
 | :--- |:-------------------------------------|:--------------------------------------------------------------------------|:-------------------|

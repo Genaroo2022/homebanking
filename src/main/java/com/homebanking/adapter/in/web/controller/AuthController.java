@@ -1,52 +1,58 @@
 package com.homebanking.adapter.in.web.controller;
 
-import com.homebanking.adapter.in.web.mapper.UserWebMapper;
+import com.homebanking.adapter.in.web.mapper.AuthWebMapper;
 import com.homebanking.adapter.in.web.request.LoginRequest;
 import com.homebanking.adapter.in.web.response.TokenResponse;
-import com.homebanking.adapter.in.web.security.JwtService;
-import com.homebanking.application.usecase.LoginUserUseCase;
-import com.homebanking.domain.entity.User;
+import com.homebanking.application.dto.authentication.request.LoginInputRequest;
+import com.homebanking.application.dto.profile.request.GetUserProfileInputRequest;
+import com.homebanking.port.in.authentication.LoginUserInputPort;
+import com.homebanking.port.in.authentication.GetUserProfileInputPort;
+import com.homebanking.adapter.in.web.response.MeResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.homebanking.application.usecase.GetUserProfileUseCase;
-import com.homebanking.adapter.in.web.response.MeResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final LoginUserUseCase loginUserUseCase;
-    private final JwtService jwtService;
-    private final GetUserProfileUseCase getUserProfileUseCase;
-    private final UserWebMapper userWebMapper;
+
+    private final LoginUserInputPort loginUserUseCase;
+    private final GetUserProfileInputPort getUserProfileUseCase;
+
+     private final AuthWebMapper authWebMapper;
+
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody @Valid LoginRequest request) {
+    public ResponseEntity<TokenResponse> login(
+            @RequestBody @Valid LoginRequest request) {
 
-        User authenticatedUser = loginUserUseCase.login(request.getEmail(), request.getPassword());
+        LoginInputRequest inputRequest = authWebMapper.toInputRequest(request);
 
-        String token = jwtService.generateToken(authenticatedUser.getEmail());
+        var outputResponse = loginUserUseCase.login(inputRequest);
 
-        return ResponseEntity.ok(new TokenResponse(token));
+        TokenResponse response = authWebMapper.toResponse(outputResponse);
 
+        return ResponseEntity.ok(response);
     }
-    @GetMapping("/me")
-    public ResponseEntity<MeResponse> getMyProfile(@AuthenticationPrincipal UserDetails userDetails) {
 
-        var result = getUserProfileUseCase.getUserProfile(userDetails.getUsername());
-        MeResponse response = userWebMapper.toMeResponse(result);
+
+    @GetMapping("/me")
+    public ResponseEntity<MeResponse> getMyProfile(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        GetUserProfileInputRequest inputRequest =
+                new GetUserProfileInputRequest(userDetails.getUsername());
+
+        var outputResponse = getUserProfileUseCase.getUserProfile(inputRequest);
+
+        MeResponse response = authWebMapper.toMeResponse(outputResponse);
+
         return ResponseEntity.ok(response);
     }
 }

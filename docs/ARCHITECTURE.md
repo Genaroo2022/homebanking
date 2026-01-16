@@ -11,12 +11,20 @@ Este proyecto implementa una **Arquitectura Hexagonal** (Ports & Adapters) estri
 
 ### Principios Clave
 1.  **Independencia de Frameworks:** El dominio no conoce a Spring Boot; este se utiliza solo como mecanismo de inyección de dependencias y configuración.
-2.  **Aislamiento:** La API REST es solo un mecanismo de entrega (`adapter/in`), intercambiable por otros interfaces sin tocar la lógica.
-3.  **Testabilidad:** La lógica de negocio es verificable mediante tests unitarios rápidos sin necesidad de levantar contextos de base de datos ni servidores web.
+
+2. **Aislamiento:** La API REST es solo un mecanismo de entrega (`adapter/in`), intercambiable por otros interfaces sin tocar la lógica.
+
+3. **Testabilidad:** La lógica de negocio es verificable mediante tests unitarios rápidos sin necesidad de levantar contextos de base de datos ni servidores web.
+
+4. **Escalabilidad:** 
+   - #### Múltiples implementaciones de un Port
+   - #### Cambios en un adaptador no rompen otros
+   - #### Preparado para microservicios
+
 
 ---
 
-## 📂 Organización del Código (Actualizado)
+# 📂 Organización del Código 
 
 La estructura de carpetas es semántica y refleja la inversión de dependencias. A continuación se detalla la responsabilidad de cada módulo:
 
@@ -81,7 +89,7 @@ Para ilustrar el desacoplamiento, este es el ciclo de vida de una operación:
 
 ---
 
-## 🛡️ Decisiones de Diseño
+# 🛡️ Decisiones de Diseño #
 
 ### Estrategia de Mapeo (Mapping)
 Se ha decidido **no compartir modelos** entre capas para evitar el acoplamiento fuerte:
