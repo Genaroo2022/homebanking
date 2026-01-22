@@ -5,35 +5,37 @@ import com.homebanking.domain.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
 
-        Map<String, String> errors = new HashMap<>();
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> {
+                    log.warn("Validacion fallida en campo: {} - {}",
+                            error.getField(), error.getDefaultMessage());
+                    return error.getField() + ": " + error.getDefaultMessage();
+                })
+                .collect(Collectors.joining("; "));
 
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-
-            log.warn("Validación fallida en campo: {} - {}", fieldName, errorMessage);
-        });
+        ErrorResponse error = ErrorResponse.of(
+                "VALIDATION_ERROR",
+                message.isBlank() ? "Validacion fallida" : message
+        );
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(errors);
+                .body(error);
     }
 
     @ExceptionHandler(InvalidUserDataException.class)
@@ -100,11 +102,6 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    /**
-     * Maneja excepciones de datos de transferencia inválidos.
-
-     * Response: 400 Bad Request
-     */
     @ExceptionHandler(InvalidTransferDataException.class)
     public ResponseEntity<ErrorResponse> handleInvalidTransferData(
             InvalidTransferDataException ex) {
@@ -121,12 +118,52 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    /**
-     * Captura cualquier excepción no controlada.
-     * Fallback para excepciones inesperadas.
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotFound(
+            AccountNotFoundException ex) {
 
-     * Response: 500 Internal Server Error
-     */
+        log.warn("Cuenta no encontrada: {}", ex.getAccountId());
+
+        ErrorResponse error = ErrorResponse.of(
+                "ACCOUNT_NOT_FOUND",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(DestinationAccountNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDestinationAccountNotFound(
+            DestinationAccountNotFoundException ex) {
+
+        log.warn("Cuenta destino no encontrada: {}", ex.getTargetCbu());
+
+        ErrorResponse error = ErrorResponse.of(
+                "DESTINATION_ACCOUNT_NOT_FOUND",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(
+            NoResourceFoundException ex) {
+
+        ErrorResponse error = ErrorResponse.of(
+                "RESOURCE_NOT_FOUND",
+                "Ruta no encontrada: " + ex.getResourcePath()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
 
@@ -134,7 +171,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.of(
                 "INTERNAL_SERVER_ERROR",
-                "Ha ocurrido un error inesperado. Por favor, intente más tarde."
+                "Ha ocurrido un error inesperado. Por favor, intente mas tarde."
         );
 
         return ResponseEntity

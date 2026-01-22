@@ -1,4 +1,4 @@
-**Cambios principales:**
+﻿**Cambios principales:**
 * Se agregó la sección **Manejo Centralizado de Errores**.
 * Se actualizó la estructura para incluir `adapter/in/web/exception`.
 
@@ -32,6 +32,7 @@ La estructura de carpetas es semántica y refleja la inversión de dependencias.
 Es el corazón del software. No tiene dependencias externas ni de frameworks.
 * **`entity/`**: Objetos de negocio con comportamiento y validación (ej. `Account`, `User`). Siguen el principio de **Entidades Ricas**.
 * **`exception/`**: Excepciones de negocio (ej. `InvalidUserDataException`), desacopladas de códigos HTTP.
+  * Incluye errores de destino inexistente (ej. `DestinationAccountNotFoundException`).
 * **`util/`**: Constantes y reglas de negocio compartidas (ej. `DomainErrorMessages`). Permite evitar "Magic Strings" y centralizar textos de error.
 * **`service/`**: Lógica de dominio pura que orquesta interacciones entre múltiples entidades (a implementar).
 
@@ -45,6 +46,7 @@ Orquesta los casos de uso. Define **QUÉ** hace el sistema.
 Define los contratos (interfaces) que desacoplan la aplicación del mundo exterior.
 * **`in/`**: Interfaces que definen los casos de uso disponibles (API Driver). Lo que la aplicación *sabe hacer*.
 * **`out/`**: Interfaces que definen qué necesita la aplicación del exterior (SPI Driven). Lo que la aplicación *necesita*.
+  * Seguridad desacoplada vía puertos como `TokenGenerator` y `PasswordHasher`.
 
 ### 4. Infrastructure Layer (`src/main/java/com/homebanking/adapter`)
 Implementación técnica de los puertos. Aquí reside la dependencia con frameworks.
@@ -52,9 +54,10 @@ Implementación técnica de los puertos. Aquí reside la dependencia con framewo
 #### 🔹 Adapters In (Driving)
 * **`web/controller`**: Controladores REST que reciben peticiones HTTP.
 * **`web/request`**: DTOs específicos de la capa Web (JSON bodies) con validaciones de formato (@Valid, @NotBlank).
-* **`web/exception`**: Global Exception Handler (@RestControllerAdvice). Intercepta excepciones de dominio y validación para traducirlas a códigos HTTP semánticos (400, 409, 500).
+* **`web/exception`**: Global Exception Handler (@RestControllerAdvice). Intercepta excepciones de dominio y validación para traducirlas a códigos HTTP semánticos (400, 404, 409, 500) con `ErrorResponse`.
 * **`web/filter`**: Filtros de seguridad (JWT) y CORS.
 * **`web/mapper`**: Conversión de DTOs Web a Objetos de Dominio.
+* **`scheduler/`**: Adaptador de scheduling para procesos asincrónicos (transferencias).
 * **`event/`**: Adaptador para comunicación asíncrona.
     * `listener`: Escuchadores que reaccionan a cambios de estado internos (ej. `TransactionEventListener`) o mensajes externos.
 
@@ -128,13 +131,17 @@ Se ha implementado un patrón `RestControllerAdvice` para interceptar excepcione
 * **400 Bad Request:**
     * Errores de validación de sintaxis (`@Valid`, `MethodArgumentNotValidException`).
     * Errores de reglas de dominio simples (ej: `InvalidUserDataException` por minoría de edad).
+    * Respuesta estandarizada con `ErrorResponse`.
 * **409 Conflict:**
     * Errores de estado o duplicidad (ej: `UserAlreadyExistsException` cuando el DNI o Email ya existen).
+* **404 Not Found:**
+    * Cuentas inexistentes (origen/destino).
 * **500 Internal Server Error:**
     * Excepciones no controladas (`Exception.class`), como red de seguridad final.
 
 ###  Transaccionalidad y consistencia
 * Se utiliza @Transactional a nivel de Caso de Uso (Application Layer) para garantizar la integridad de los procesos de negocio complejos.
+* Concurrencia protegida con locking optimista (`@Version`) en Account JPA.
 
 * Caso de Uso: Registro de Usuario (RegisterUserUseCase) Implementamos una regla de negocio estricta: "Todo Usuario nace con una Cuenta".
 
@@ -151,3 +158,7 @@ Se ha implementado un patrón `RestControllerAdvice` para interceptar excepcione
 * **Capa Dominio (Entidad):** Validaciones de negocio e integridad (ej: edad mínima, algoritmo de tarjeta) en el constructor de la entidad.
 
 ---
+
+
+
+

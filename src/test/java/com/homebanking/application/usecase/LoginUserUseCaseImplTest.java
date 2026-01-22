@@ -4,14 +4,14 @@ import com.homebanking.application.dto.authentication.request.LoginInputRequest;
 import com.homebanking.application.dto.authentication.response.TokenOutputResponse;
 import com.homebanking.domain.entity.User;
 import com.homebanking.domain.exception.InvalidUserDataException;
+import com.homebanking.port.out.PasswordHasher;
+import com.homebanking.port.out.TokenGenerator;
 import com.homebanking.port.out.UserRepository;
-import com.homebanking.adapter.in.web.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -40,10 +40,10 @@ class LoginUserUseCaseImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private PasswordHasher passwordHasher;
 
     @Mock
-    private JwtService jwtService;
+    private TokenGenerator tokenGenerator;
 
     private LoginUserUseCaseImpl loginUseCase;
 
@@ -51,8 +51,8 @@ class LoginUserUseCaseImplTest {
     void setUp() {
         loginUseCase = new LoginUserUseCaseImpl(
                 userRepository,
-                passwordEncoder,
-                jwtService
+                passwordHasher,
+                tokenGenerator
         );
     }
 
@@ -72,9 +72,9 @@ class LoginUserUseCaseImplTest {
 
         when(userRepository.findByEmail(email))
                 .thenReturn(Optional.of(domainUser));
-        when(passwordEncoder.matches(rawPassword, hashedPassword))
+        when(passwordHasher.matches(rawPassword, hashedPassword))
                 .thenReturn(true);
-        when(jwtService.generateToken(email))
+        when(tokenGenerator.generateToken(email))
                 .thenReturn(expectedToken);
 
         // Act
@@ -88,8 +88,8 @@ class LoginUserUseCaseImplTest {
 
         // Verify interactions
         verify(userRepository).findByEmail(email);
-        verify(passwordEncoder).matches(rawPassword, hashedPassword);
-        verify(jwtService).generateToken(email);
+        verify(passwordHasher).matches(rawPassword, hashedPassword);
+        verify(tokenGenerator).generateToken(email);
     }
 
     /**
@@ -112,8 +112,8 @@ class LoginUserUseCaseImplTest {
 
         // Verify
         verify(userRepository).findByEmail(email);
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(jwtService, never()).generateToken(anyString());
+        verify(passwordHasher, never()).matches(anyString(), anyString());
+        verify(tokenGenerator, never()).generateToken(anyString());
     }
 
     /**
@@ -131,7 +131,7 @@ class LoginUserUseCaseImplTest {
 
         when(userRepository.findByEmail(email))
                 .thenReturn(Optional.of(domainUser));
-        when(passwordEncoder.matches(rawPassword, hashedPassword))
+        when(passwordHasher.matches(rawPassword, hashedPassword))
                 .thenReturn(false);
 
         // Act & Assert
@@ -140,7 +140,7 @@ class LoginUserUseCaseImplTest {
                 .hasMessageContaining("Credenciales inválidas");
 
         // Verify
-        verify(jwtService, never()).generateToken(anyString());
+        verify(tokenGenerator, never()).generateToken(anyString());
     }
 
     // Método helper para crear usuarios de prueba

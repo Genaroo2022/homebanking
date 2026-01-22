@@ -1,4 +1,4 @@
-# 🏦 Digital Home Banking - Hexagonal Architecture
+﻿# 🏦 Digital Home Banking - Hexagonal Architecture
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
 ![Spring Boot 4.0.1](https://img.shields.io/badge/Spring_Boot-4.0.1-brightgreen?style=flat-square&logo=springboot)![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-blueviolet?style=flat-square)
@@ -15,14 +15,14 @@ El núcleo del sistema (`Domain`) está completamente aislado de frameworks exte
 ### Estructura del Proyecto
 El código sigue una organización semántica clara:
 
-````text
+```text
 src/
 ├── main/java/com/homebanking/
 │   ├── application
 │   │   ├── dto          # Request/Response records
-│   │   └── usecase      # Lógica de aplicación (Casos de Uso)
+│   │   └── usecase      # Logica de aplicacion (Casos de Uso)
 │   ├── domain
-│   │   ├── entity       # Entidades del núcleo (sin dependencias)
+│   │   ├── entity       # Entidades del nucleo (sin dependencias)
 │   │   ├── service      # Servicios de dominio
 │   │   └── exception    # Excepciones de dominio
 │   ├── port
@@ -30,21 +30,30 @@ src/
 │   │   └── out          # Interfaces de salida
 │   ├── adapter
 │   │   ├── in
-│   │   │   └── web      # Controllers, Filters (JWT) y Mappers
+│   │   │   ├── web        # Controllers, Filters (JWT) y Mappers
+│   │   │   └── scheduler  # Jobs programados (procesamiento asincrono)
 │   │   └── out
 │   │       ├── persistence # JPA Repositories & Entities
-│   │       └── external
-│   │           ├── audit       # Adaptador de Auditoría
-│   │           ├── notification # Email/SMS
-│   │           └── security    # Adaptador de Seguridad
+│   │       ├── external
+│   │       │   ├── audit        # Adaptador de Auditoria
+│   │       │   ├── notification # Email/SMS
+│   │       │   └── security     # Adaptador de Seguridad (e.g. validación externa)
+│   │       └── security    # Hash de contrasenas (puerto out)
 │   └── config           # Beans de Spring (Security, OpenAPI, Persistence)
 │
 └── test/java/com/homebanking/
     ├── application      # Unit Tests de Casos de Uso
     ├── domain           # Unit Tests de Entidades/Servicios
     ├── adapter          # Slice Tests (Controllers/Repositories)
-    └── integration      # Tests de integración end-to-end
-````
+    └── integration      # Tests de integracion end-to-end
+```
+
+### Notas de implementacion actuales
+- Scheduling de transferencias aislado en `adapter/in/scheduler`.
+- Generacion de tokens y hashing de contrasenas desacoplados via puertos `TokenGenerator` y `PasswordHasher`.
+- Respuestas de error unificadas con `ErrorResponse` (incluye validaciones).
+- Transferencias se rechazan si la cuenta destino no existe.
+- Concurrencia de saldo protegida con `@Version` en Account JPA.
 
 
 ## 🛠️ Stack Tecnológico
@@ -251,7 +260,8 @@ bash#
 | **Payments** | Transferencias Atómicas (ACID)       | 🚧 Core Implemented                                                       | `POST /transfers`  |
 | **Cards** | Emisión y Lógica de Luhn             | 🚧 Core Implemented                                                       | `POST /cards`      |
 
-© 2026 - **Genaro Rotstein** | *Software Engineer*
+ **Genaro Rotstein** | **Software Engineer**
 
 📖 Para detalles técnicos profundos, ver [Documentación de Arquitectura](docs/ARCHITECTURE.md)
+
 

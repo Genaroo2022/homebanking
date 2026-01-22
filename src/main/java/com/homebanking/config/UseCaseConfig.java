@@ -7,11 +7,11 @@ import com.homebanking.port.in.authentication.LoginUserInputPort;
 import com.homebanking.port.in.authentication.GetUserProfileInputPort;
 import com.homebanking.port.in.registration.RegisterUserInputPort;
 import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.PasswordHasher;
+import com.homebanking.port.out.TokenGenerator;
 import com.homebanking.port.out.UserRepository;
-import com.homebanking.adapter.in.web.security.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class UseCaseConfig {
@@ -19,9 +19,9 @@ public class UseCaseConfig {
     @Bean
     public LoginUserInputPort loginUserUseCase(
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
-        return new LoginUserUseCaseImpl(userRepository, passwordEncoder, jwtService);
+            PasswordHasher passwordHasher,
+            TokenGenerator tokenGenerator) {
+        return new LoginUserUseCaseImpl(userRepository, passwordHasher, tokenGenerator);
     }
 
     @Bean
@@ -34,8 +34,8 @@ public class UseCaseConfig {
     @Bean
     public RegisterUserInputPort registerUserUseCase(
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
+            PasswordHasher passwordHasher,
             AccountRepository accountRepository) {
-        return new RegisterUserUseCaseImpl(userRepository, passwordEncoder, accountRepository);
+        return new RegisterUserUseCaseImpl(userRepository, passwordHasher, accountRepository);
     }
 }

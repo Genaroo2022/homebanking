@@ -7,11 +7,10 @@ import com.homebanking.domain.exception.InvalidUserDataException;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.in.authentication.LoginUserInputPort;
 import com.homebanking.port.out.UserRepository;
-import com.homebanking.adapter.in.web.security.JwtService;
+import com.homebanking.port.out.PasswordHasher;
+import com.homebanking.port.out.TokenGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -24,15 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 
  * No tiene dependencias de Spring Web, fácil de testear.
  */
-@Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
 public class LoginUserUseCaseImpl implements LoginUserInputPort {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final PasswordHasher passwordHasher;
+    private final TokenGenerator tokenGenerator;
 
     /**
      * Autentica un usuario validando credenciales y generando token.
@@ -49,12 +47,12 @@ public class LoginUserUseCaseImpl implements LoginUserInputPort {
                     return new InvalidUserDataException(DomainErrorMessages.INVALID_CREDENTIALS);
                 });
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+        if (!passwordHasher.matches(request.password(), user.getPassword())) {
             log.warn("Intento de login fallido para usuario: {}", request.email());
             throw new InvalidUserDataException(DomainErrorMessages.INVALID_CREDENTIALS);
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        String token = tokenGenerator.generateToken(user.getEmail());
         log.info("Login exitoso para usuario: {}", request.email());
 
         return new TokenOutputResponse(token);

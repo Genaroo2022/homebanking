@@ -6,6 +6,7 @@ import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.User;
 import com.homebanking.domain.exception.UserAlreadyExistsException;
 import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.PasswordHasher;
 import com.homebanking.port.out.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -37,7 +37,7 @@ class RegisterUserUseCaseImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private PasswordHasher passwordHasher;
 
     @Mock
     private AccountRepository accountRepository;
@@ -48,7 +48,7 @@ class RegisterUserUseCaseImplTest {
     void setUp() {
         registerUseCase = new RegisterUserUseCaseImpl(
                 userRepository,
-                passwordEncoder,
+                passwordHasher,
                 accountRepository
         );
     }
@@ -83,7 +83,7 @@ class RegisterUserUseCaseImplTest {
 
         when(userRepository.findByEmailOrDni(request.email(), request.dni()))
                 .thenReturn(Optional.empty());
-        when(passwordEncoder.encode(request.password()))
+        when(passwordHasher.hash(request.password()))
                 .thenReturn("hashed_password");
         when(userRepository.save(any(User.class)))
                 .thenReturn(savedUser);
@@ -128,7 +128,7 @@ class RegisterUserUseCaseImplTest {
         User existingUser = User.withId(
                 1L,
                 "john@example.com",
-                "hashed",
+                "hashed123",
                 "Jane",
                 "Doe",
                 "87654321",

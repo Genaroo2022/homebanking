@@ -68,6 +68,7 @@ public final class DomainErrorMessages {
 
     // TRANSFER -> Amount validations
     public static final String TRANSFER_AMOUNT_INVALID = "El monto de la transferencia debe ser mayor a cero";
+    public static final String IDEMPOTENCY_KEY_REQUIRED = "La idempotency key es obligatoria";
 
     // TRANSFER -> Business rules
     public static final String TRANSFER_SAME_ACCOUNT = "No puedes transferir dinero a la misma cuenta de origen";
@@ -76,6 +77,20 @@ public final class DomainErrorMessages {
     // TRANSFER -> Required fields
     public static final String TRANSFER_DESC_REQUIRED = "Debes indicar una descripción o concepto";
     public static final String ORIGIN_ACCOUNT_ID_INVALID = "El ID de la cuenta de origen es inválido";
+    public static final String ACCOUNT_NOT_FOUND = "La cuenta especificada no existe";
+
+
+    public static final String TRANSFER_AMOUNT_TOO_SMALL =
+            "El monto mínimo de transferencia es $0.01";
+    public static final String TRANSFER_AMOUNT_TOO_LARGE =
+            "El monto máximo de transferencia es $1,000,000";
+    public static final String CBU_INVALID_FORMAT =
+            "El CBU debe tener exactamente 22 dígitos";
+    public static final String TRANSFER_FAILURE_REASON_REQUIRED =
+            "La razón del fallo es obligatoria";
+    public static final String TRANSFER_REJECTION_REASON_REQUIRED =
+            "La razón del rechazo es obligatoria";
+
 
     // --- CARD MESSAGES ---
 

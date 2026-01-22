@@ -10,7 +10,7 @@
 		<relativePath/>
 	</parent>
 
-	<groupId>com.rotstein</groupId>
+	<groupId>com</groupId>
 	<artifactId>homebanking</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>homebanking</name>

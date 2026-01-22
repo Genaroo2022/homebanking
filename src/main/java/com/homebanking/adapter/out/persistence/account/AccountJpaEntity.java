@@ -33,6 +33,10 @@ class AccountJpaEntity {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "version", nullable = false)
+    @Version
+    private Long version;
+
     public AccountJpaEntity(Long userId, String cbu, String alias,
                             BigDecimal balance, LocalDateTime createdAt) {
         this.userId = userId;
@@ -40,5 +44,6 @@ class AccountJpaEntity {
         this.alias = alias;
         this.balance = balance;
         this.createdAt = createdAt;
+        this.version = 0L;
     }
 }

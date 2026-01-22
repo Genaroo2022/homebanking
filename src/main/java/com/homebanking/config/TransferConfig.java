@@ -1,0 +1,71 @@
+
+package com.homebanking.config;
+
+import com.homebanking.application.usecase.CreateTransferUseCaseImpl;
+import com.homebanking.application.service.TransferProcessorService;
+import com.homebanking.port.in.transfer.CreateTransferInputPort;
+import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.NotificationOutputPort;
+import com.homebanking.port.out.TransferProcessorOutputPort;
+import com.homebanking.port.out.TransferRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/*
+ * Config: TransferConfig
+
+ * Configuración de inyección de dependencias para transferencias.
+
+ * Responsabilidades:
+ * ✓ "@Instanciar" "use cases"
+ * ✓ Inyectar dependencias (repositories, ports)
+ * ✓ Mantener árbol de dependencias limpio
+
+ * Beneficios:
+ * • Centraliza configuración
+ * • Facilita testing ("@mockear" dependencias)
+ * • Documenta la estructura de dependencias
+ * • Permite múltiples implementaciones del mismo puerto
+ */
+@Configuration
+public class TransferConfig {
+
+    /**
+     * Bean: CreateTransferInputPort
+
+     * Instancia el "use case" de crear transferencias.
+     * Inyecta sus dependencias: repositories y ports.
+     */
+    @Bean
+    public CreateTransferInputPort createTransferUseCase(
+            AccountRepository accountRepository,
+            TransferRepository transferRepository) {
+        return new CreateTransferUseCaseImpl(
+                accountRepository,
+                transferRepository
+        );
+    }
+
+    /**
+     * Bean: TransferProcessorService
+
+     * Servicio que procesa transferencias de forma asincrónica.
+     * Inyecta:
+     * • Repositories (para leer/escribir estado)
+     * • TransferProcessorOutputPort (para llamar sistema externo)
+     * • NotificationOutputPort (para notificar usuarios)
+     */
+    @Bean
+    public TransferProcessorService transferProcessorService(
+            TransferRepository transferRepository,
+            AccountRepository accountRepository,
+            TransferProcessorOutputPort transferProcessor,
+            NotificationOutputPort notificationPort) {
+        return new TransferProcessorService(
+                transferRepository,
+                accountRepository,
+                transferProcessor,
+                notificationPort
+        );
+    }
+}

@@ -8,11 +8,10 @@ import com.homebanking.domain.exception.UserAlreadyExistsException;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.in.registration.RegisterUserInputPort;
 import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.PasswordHasher;
 import com.homebanking.port.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -28,13 +27,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
  * Nota: Esta clase NO utiliza herencia (Liskov Substitution).
  */
-@Service
 @RequiredArgsConstructor
 @Slf4j
 public class RegisterUserUseCaseImpl implements RegisterUserInputPort {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordHasher passwordHasher;
     private final AccountRepository accountRepository;
 
     /**
@@ -65,7 +63,7 @@ public class RegisterUserUseCaseImpl implements RegisterUserInputPort {
                 request.address()
         );
 
-        String encodedPassword = passwordEncoder.encode(request.password());
+        String encodedPassword = passwordHasher.hash(request.password());
         newUser.changePassword(encodedPassword);
 
         User savedUser = userRepository.save(newUser);

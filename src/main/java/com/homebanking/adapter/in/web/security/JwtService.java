@@ -1,5 +1,6 @@
 package com.homebanking.adapter.in.web.security;
 
+import com.homebanking.port.out.TokenGenerator;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -15,7 +16,7 @@ import java.util.function.Function;
 
 @Service
 @Slf4j
-public class JwtService {
+public class JwtService implements TokenGenerator {
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -23,6 +24,7 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
+    @Override
     public String generateToken(String username) {
         return buildToken(new HashMap<>(), username);
     }
