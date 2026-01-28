@@ -1,7 +1,4 @@
-﻿**Cambios principales:**
-* Se agregó la sección **Manejo Centralizado de Errores**.
-* Se actualizó la estructura para incluir `adapter/in/web/exception`.
-
+﻿
 # 🏛️ Arquitectura del Sistema
 
 🚧 Nota de Estado: Este proyecto se encuentra en su fase fundacional. La estructura de directorios y este documento de arquitectura representan el diseño técnico que guiará la implementación.
@@ -38,13 +35,14 @@ Es el corazón del software. No tiene dependencias externas ni de frameworks.
 
 ### 2. Application Layer (`src/main/java/com/homebanking/application`)
 Orquesta los casos de uso. Define **QUÉ** hace el sistema.
-* **`usecase/`**: Implementación de los casos de uso (ej. `TransferMoneyUseCase`). Aquí reside la orquestación del flujo.
+* **`usecase/`**: Implementación de los casos de uso (ej. `CreateTransferUseCase`, `ProcessTransferUseCase`, `RetryFailedTransferUseCase`, `GetTransferUseCase`). Aquí reside la orquestación del flujo.
 * **`dto/`**: Objetos inmutables (Records) para transporte de datos.
     * `request`: Estructuras de entrada (Comandos) que reciben los casos de uso. Encapsulan los datos necesarios para ejecutar una acción.
     * `response`: Estructuras de salida que devuelven los datos procesados, desacoplando el dominio de la vista API.
 ### 3. Interface Definition Layer (`src/main/java/com/homebanking/port`)
 Define los contratos (interfaces) que desacoplan la aplicación del mundo exterior.
 * **`in/`**: Interfaces que definen los casos de uso disponibles (API Driver). Lo que la aplicación *sabe hacer*.
+    * Incluye puertos internos de testing en `dev` (ej. depósito en cuenta).
 * **`out/`**: Interfaces que definen qué necesita la aplicación del exterior (SPI Driven). Lo que la aplicación *necesita*.
   * Seguridad desacoplada vía puertos como `TokenGenerator` y `PasswordHasher`.
 
@@ -53,6 +51,7 @@ Implementación técnica de los puertos. Aquí reside la dependencia con framewo
 
 #### 🔹 Adapters In (Driving)
 * **`web/controller`**: Controladores REST que reciben peticiones HTTP.
+    * `DevAccountController` habilita `POST /accounts/{id}/deposit` solo en perfil `dev`.
 * **`web/request`**: DTOs específicos de la capa Web (JSON bodies) con validaciones de formato (@Valid, @NotBlank).
 * **`web/exception`**: Global Exception Handler (@RestControllerAdvice). Intercepta excepciones de dominio y validación para traducirlas a códigos HTTP semánticos (400, 404, 409, 500) con `ErrorResponse`.
 * **`web/filter`**: Filtros de seguridad (JWT) y CORS.
@@ -79,16 +78,18 @@ Implementación técnica de los puertos. Aquí reside la dependencia con framewo
 
 Para ilustrar el desacoplamiento, este es el ciclo de vida de una operación:
 
-1.  **Entrada:** El cliente envía `POST /transfers`. El `TransferController` recibe la petición.
+1.  **Entrada:** El cliente envía `POST /api/transfers`. El `TransferController` recibe la petición.
 2.  **Validación:** Se valida el token JWT (`SecurityAdapter`) y el formato del JSON.
 3.  **Cruce de Frontera:** El controlador convierte el DTO web a objetos de dominio y llama al puerto de entrada (`TransferPortIn`).
-4.  **Núcleo:** El caso de uso (`TransferMoneyUseCase`) ejecuta la lógica:
+4.  **Núcleo:** El caso de uso (`CreateTransferUseCase`) ejecuta la lógica:
     * Consulta saldos a través del puerto `AccountRepositoryPort`.
     * Aplica reglas de negocio (ej: no permitir saldo negativo).
     * Ordena la persistencia de los cambios.
 5.  **Salida:**
     * El adaptador de persistencia guarda los datos en PostgreSQL.
     * El adaptador de notificación envía un email de confirmación.
+
+El procesamiento posterior se dispara con `POST /api/transfers/{id}/process` o por el scheduler, manteniendo la transacción del caso de uso encapsulada.
 
 ---
 
@@ -126,6 +127,7 @@ Opté por un diseño de **Entidades Ricas** en contraposición al antipatrón de
 
 ### Manejo Centralizado de Errores (Global Exception Handler)
 Se ha implementado un patrón `RestControllerAdvice` para interceptar excepciones en toda la aplicación y traducirlas a respuestas JSON estandarizadas. Esto evita exponer trazas de error (Stack Traces) al cliente.
+Se utiliza un handler específico de transferencias con mayor prioridad y un handler global como fallback.
 
 **Estrategia de Mapeo HTTP:**
 * **400 Bad Request:**

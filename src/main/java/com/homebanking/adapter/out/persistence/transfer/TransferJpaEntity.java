@@ -5,10 +5,28 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+
+import com.homebanking.domain.enums.TransferStatus;
+import com.homebanking.domain.entity.Transfer;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+
 /**
- * Entity JPA: TransferJpaEntity
+ * JPA Entity: TransferJpaEntity
 
  * Mapeo O/R para persistencia.
+
+ * Características:
+ * ✓ Constructor privado (solo factory method)
+ * ✓ Sin setters públicos (solo Lombok @Getter)
+ * ✓ Factory method: fromDomain()
+ * ✓ Índices optimizados
+ * ✓ Auditoría con @Version
+
  * Nota importante: Separado de la entidad de dominio Transfer.
  * La JPA entity es técnica, la entidad de dominio es lógica.
  */
@@ -21,9 +39,9 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-class TransferJpaEntity {
+@AllArgsConstructor(access = AccessLevel.PRIVATE)  // ← Constructor privado con todos los parámetros
+public class TransferJpaEntity {
 
-    @Setter(AccessLevel.PACKAGE)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -45,41 +63,58 @@ class TransferJpaEntity {
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private com.homebanking.domain.enums.TransferStatus status;
+    private TransferStatus status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "executed_at")
-    LocalDateTime executedAt;
+    private LocalDateTime executedAt;
 
     @Column(name = "failed_at")
-    LocalDateTime failedAt;
+    private LocalDateTime failedAt;
 
     @Column(name = "failure_reason", length = 500)
-    String failureReason;
+    private String failureReason;
 
     @Column(name = "retry_count", nullable = false)
-    Integer retryCount;
+    private Integer retryCount;
 
     @Column(name = "last_retry_at")
-    LocalDateTime lastRetryAt;
+    private LocalDateTime lastRetryAt;
 
     @Column(name = "version", nullable = false)
     @Version
     private Long version;
 
-    public TransferJpaEntity(String idempotencyKey, Long originAccountId, String targetCbu,
-                             BigDecimal amount, String description,
-                             com.homebanking.domain.enums.TransferStatus status, LocalDateTime createdAt) {
-        this.idempotencyKey = idempotencyKey;
-        this.originAccountId = originAccountId;
-        this.targetCbu = targetCbu;
-        this.amount = amount;
-        this.description = description;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.retryCount = 0;
-        this.version = 0L;
+    // ==================== FACTORY METHOD ====================
+
+    /**
+     * Factory method: Crea TransferJpaEntity desde Transfer domain.
+
+     * Este es el ÚNICO forma de crear una instancia válida.
+     * Encapsula toda la lógica de mapeo.
+     * Garantiza estado consistente.
+
+     * @param domain Transfer entity del dominio
+     * @return TransferJpaEntity totalmente inicializado
+     */
+    public static TransferJpaEntity fromDomain(Transfer domain) {
+        return new TransferJpaEntity(
+                domain.getId(),                           // id
+                domain.getIdempotencyKey().value(),       // idempotencyKey
+                domain.getOriginAccountId(),              // originAccountId
+                domain.getTargetCbu().value(),            // targetCbu
+                domain.getAmount().value(),               // amount
+                domain.getDescription().value(),          // description
+                domain.getStatus(),                       // status
+                domain.getCreatedAt(),                    // createdAt
+                domain.getExecutedAt(),                   // executedAt
+                domain.getFailedAt(),                     // failedAt
+                domain.getFailureReason(),                // failureReason
+                domain.getRetryCount(),                   // retryCount
+                domain.getLastRetryAt(),                  // lastRetryAt
+                0L                                        // version (nueva entidad = 0)
+        );
     }
 }

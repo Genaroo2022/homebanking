@@ -18,8 +18,18 @@ class AccountPersistenceAdapter implements AccountRepository {
 
     @Override
     public Account save(Account account) {
-        AccountJpaEntity entity = accountMapper.toJpaEntity(account);
-        AccountJpaEntity saved = springDataAccountRepository.save(entity);
+        if (account.getId() == null) {
+            AccountJpaEntity entity = accountMapper.toJpaEntity(account);
+            AccountJpaEntity saved = springDataAccountRepository.save(entity);
+            return accountMapper.toDomain(saved);
+        }
+
+        AccountJpaEntity existing = springDataAccountRepository.findById(account.getId())
+                .orElseGet(() -> accountMapper.toJpaEntity(account));
+
+        existing.setBalance(account.getBalance().value());
+
+        AccountJpaEntity saved = springDataAccountRepository.save(existing);
         return accountMapper.toDomain(saved);
     }
 

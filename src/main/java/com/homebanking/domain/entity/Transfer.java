@@ -1,293 +1,409 @@
 package com.homebanking.domain.entity;
 
 import com.homebanking.domain.enums.TransferStatus;
-import com.homebanking.domain.exception.InvalidTransferDataException;
+import com.homebanking.domain.event.TransferCompletedEvent;
+import com.homebanking.domain.event.TransferFailedEvent;
+import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import com.homebanking.domain.valueobject.common.Cbu;
+import com.homebanking.domain.valueobject.transfer.IdempotencyKey;
+import com.homebanking.domain.valueobject.transfer.RetryPolicy;
+import com.homebanking.domain.valueobject.transfer.TransferAmount;
+import com.homebanking.domain.valueobject.transfer.TransferDescription;
+import com.homebanking.domain.valueobject.transfer.TransferFailure;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Entity: Transfer
-
- * Invariantes protegidas:
- * - Idempotency key único e inmutable (previene duplicados)
- * - Status solo puede transicionar en dirección válida
- * - Montos siempre positivos
- * - CBU válido de destino
- * - Nunca transferir a la misma cuenta
-
- * Responsabilidades de dominio:
- * - Validar datos de transferencia
- * - Controlar transiciones de estado
- * - Marcar timestamps de ejecución
-
- * No conoce:
- * - Cómo se persiste
- * - Cómo se notifica
- * - Cómo se auditoria
+ * AGGREGATE ROOT: Transfer
+ *
+ * Responsabilidades:
+ * ✓ Guardar estado de la transferencia
+ * ✓ Garantizar invariantes del dominio
+ * ✓ Transiciones de estado controladas
+ * ✓ Publicar eventos de dominio
+ *
+ * No responsable de:
+ * ✗ Validar datos (→ TransferValidator)
+ * ✗ Orquestar transiciones (→ TransferStateService)
+ * ✗ Persistencia (→ Repository)
+ * ✗ Persistir eventos (→ Event publisher)
+ *
+ * Invariantes:
+ * • Si status == COMPLETED, executedAt != null
+ * • Si status == FAILED, failure != null
+ * • Si status == REJECTED, failure != null
+ * • No hay forma de violar estos invariantes sin pasar por métodos controlados
  */
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Transfer {
 
-    private static final String CBU_REGEX = "^\\d+$";
-    public static final int CBU_LENGTH = 22;
-
-    // --- IDENTIDAD ---
+    // ==================== IDENTIDAD ====================
     private Long id;
-    private String idempotencyKey; // UUID para idempotencia
+    private IdempotencyKey idempotencyKey;
 
-    // --- DATOS TRANSACCIONALES ---
+    // ==================== DATOS TRANSACCIONALES ====================
     private Long originAccountId;
-    private String targetCbu;
-    private BigDecimal amount;
-    private String description;
+    private Cbu targetCbu;
+    private TransferAmount amount;
+    private TransferDescription description;
 
-    // --- ESTADO Y AUDITORÍA ---
+    // ==================== ESTADO ====================
     private TransferStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime executedAt;
-    private LocalDateTime failedAt;
-    private String failureReason;
 
-    // --- CONTROL DE INTENTOS ---
-    private Integer retryCount;
-    private LocalDateTime lastRetryAt;
+    // ==================== REINTENTOS Y FALLOS ====================
+    private RetryPolicy retryPolicy;
+    private TransferFailure failure;
 
-    /**
-     * Constructor: Crear nueva transferencia (sin ID).
-     * Genera automáticamente idempotency key.
-     */
-    public Transfer(Long originAccountId, String targetCbu,
-                    BigDecimal amount, String description) {
-        validateTransferData(originAccountId, targetCbu, amount, description);
+    // ==================== EVENTOS DE DOMINIO ====================
+    private List<Object> domainEvents = new ArrayList<>();
 
-        this.originAccountId = originAccountId;
-        this.targetCbu = targetCbu;
-        this.amount = amount;
-        this.description = description;
-        this.idempotencyKey = UUID.randomUUID().toString();
-        this.status = TransferStatus.PENDING;
-        this.createdAt = LocalDateTime.now();
-        this.retryCount = 0;
-    }
+    // ==================== FACTORY METHODS ====================
 
     /**
-     * Factory Method: Crear nueva transferencia con idempotency key provista por el cliente.
+     * Crea una nueva transferencia (CREACIÓN).
+     *
+     * Factory para crear transferencias nuevas desde cero.
+     * Valida datos de entrada y garantiza estado inicial consistente.
+     *
+     * @param originAccountId ID de la cuenta origen
+     * @param targetCbu CBU de la cuenta destino
+     * @param amount Monto a transferir
+     * @param description Descripción de la transferencia
+     * @param idempotencyKey Clave de idempotencia
+     * @return Transfer en estado PENDING con retryPolicy inicial
+     * @throws InvalidTransferDataException si datos son inválidos
      */
-    public static Transfer createWithIdempotencyKey(
-            Long originAccountId, String targetCbu, BigDecimal amount,
-            String description, String idempotencyKey) {
-
-        validateTransferData(originAccountId, targetCbu, amount, description);
-        validateIdempotencyKey(idempotencyKey);
+    public static Transfer create(
+            Long originAccountId,
+            Cbu targetCbu,
+            TransferAmount amount,
+            TransferDescription description,
+            IdempotencyKey idempotencyKey) {
 
         Transfer transfer = new Transfer();
+        transfer.id = null;                                    // ← Sin ID aún (lo asigna BD)
         transfer.originAccountId = originAccountId;
         transfer.targetCbu = targetCbu;
         transfer.amount = amount;
         transfer.description = description;
         transfer.idempotencyKey = idempotencyKey;
-        transfer.status = TransferStatus.PENDING;
+        transfer.status = TransferStatus.PENDING;             // ← Estado inicial
         transfer.createdAt = LocalDateTime.now();
-        transfer.retryCount = 0;
+        transfer.retryPolicy = RetryPolicy.initial();         // ← 0 reintentos
+        transfer.domainEvents = new ArrayList<>();
+
         return transfer;
     }
 
     /**
-     * Factory Method: Reconstitución desde persistencia.
+     * Reconstituyir una transferencia desde persistencia (RECONSTITUCIÓN).
+     *
+     * Factory para cargar transferencias desde la base de datos.
+     * Reconstituyir estado completo incluyendo reintentos y fallos.
+     *
+     * @param id ID de la transferencia (desde BD)
+     * @param idempotencyKey Clave de idempotencia
+     * @param originAccountId ID de la cuenta origen
+     * @param targetCbu CBU de la cuenta destino
+     * @param amount Monto de la transferencia
+     * @param description Descripción
+     * @param status Estado actual
+     * @param createdAt Fecha de creación
+     * @param executedAt Fecha de ejecución (si completada)
+     * @param failureReason Razón del fallo (si falló)
+     * @param failedAt Fecha del fallo (si falló)
+     * @param retryCount Cantidad de reintentos
+     * @param lastRetryAt Fecha del último reintento
+     * @return Transfer con estado reconstituyido
      */
-    public static Transfer withId(
-            Long id, String idempotencyKey, Long originAccountId, String targetCbu,
-            BigDecimal amount, String description, TransferStatus status,
-            LocalDateTime createdAt, LocalDateTime executedAt, LocalDateTime failedAt,
-            String failureReason, Integer retryCount, LocalDateTime lastRetryAt) {
-
-        validateStructuralData(id, idempotencyKey, createdAt);
-        validateTransferData(originAccountId, targetCbu, amount, description);
-
-        return hydrate(id, idempotencyKey, originAccountId, targetCbu, amount,
-                description, status, createdAt, executedAt, failedAt,
-                failureReason, retryCount, lastRetryAt);
-    }
-
-    private static Transfer hydrate(
-            Long id, String idempotencyKey, Long originAccountId, String targetCbu,
-            BigDecimal amount, String description, TransferStatus status,
-            LocalDateTime createdAt, LocalDateTime executedAt, LocalDateTime failedAt,
-            String failureReason, Integer retryCount, LocalDateTime lastRetryAt) {
+    public static Transfer reconstruct(
+            Long id,
+            IdempotencyKey idempotencyKey,
+            Long originAccountId,
+            Cbu targetCbu,
+            TransferAmount amount,
+            TransferDescription description,
+            TransferStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime executedAt,
+            String failureReason,
+            LocalDateTime failedAt,
+            Integer retryCount,
+            LocalDateTime lastRetryAt) {
 
         Transfer transfer = new Transfer();
-        transfer.id = id;
+        transfer.id = id;                                           // ← Con ID desde BD
         transfer.idempotencyKey = idempotencyKey;
         transfer.originAccountId = originAccountId;
         transfer.targetCbu = targetCbu;
         transfer.amount = amount;
         transfer.description = description;
-        transfer.status = status;
+        transfer.status = status;                                   // ← Puede ser cualquiera
         transfer.createdAt = createdAt;
         transfer.executedAt = executedAt;
-        transfer.failedAt = failedAt;
-        transfer.failureReason = failureReason;
-        transfer.retryCount = retryCount;
-        transfer.lastRetryAt = lastRetryAt;
+        transfer.retryPolicy = RetryPolicy.of(retryCount, lastRetryAt);
+
+        // Reconstituyir failure si existe
+        if (failedAt != null || (failureReason != null && !failureReason.isBlank())) {
+            transfer.failure = TransferFailure.of(failureReason, failedAt);
+        }
+
+        transfer.domainEvents = new ArrayList<>();  // ← Los eventos se publican al persistir
+
         return transfer;
     }
 
-    // ============================================
-    // BUSINESS METHODS (Transiciones de Estado)
-    // ============================================
+    // ==================== BUSINESS METHODS: STATE TRANSITIONS ====================
 
     /**
-     * Marca la transferencia como completada.
-     * Transición: PENDING -> COMPLETED
+     * Transición: PENDING → PROCESSING | FAILED → PROCESSING (reintento)
+     *
+     * Marca la transferencia como siendo procesada.
+     * Puede ocurrir desde PENDING (primera vez) o FAILED (reintento).
+     *
+     * @throws InvalidTransferDataException si la transición no es válida
+     */
+    public void markAsProcessing() {
+        if (status == TransferStatus.PENDING) {
+            this.status = TransferStatus.PROCESSING;
+            return;
+        }
+
+        if (status == TransferStatus.FAILED && isRetryable()) {
+            this.status = TransferStatus.PROCESSING;
+            this.retryPolicy = retryPolicy.withRetryIncremented();
+            return;
+        }
+
+        throw new InvalidTransferDataException(
+                String.format(DomainErrorMessages.INVALID_PROCESSING_TRANSITION, status)
+        );
+    }
+
+    /**
+     * Transición: PROCESSING → COMPLETED
+     *
+     * Marca la transferencia como completada exitosamente.
+     * Solo es válido desde estado PROCESSING.
+     *
+     * INVARIANTE: Si status == COMPLETED, executedAt != null
+     *
+     * @throws InvalidTransferDataException si no está en PROCESSING
      */
     public void markAsCompleted() {
-        validateCanTransition();
+        if (status != TransferStatus.PROCESSING) {
+            throw new InvalidTransferDataException(
+                    String.format(DomainErrorMessages.ONLY_PROCESSING_CAN_COMPLETE, status)
+            );
+        }
+
         this.status = TransferStatus.COMPLETED;
         this.executedAt = LocalDateTime.now();
+
+        // Publicar evento de dominio
+        this.domainEvents.add(new TransferCompletedEvent(
+                this.id,
+                this.originAccountId,
+                this.targetCbu.value(),
+                this.amount.value(),
+                LocalDateTime.now()
+        ));
     }
 
     /**
-     * Marca la transferencia como fallida.
-     * Transición: PENDING -> FAILED
-     * Registra razón del fallo y timestamp.
+     * Transición: PROCESSING → FAILED
+     *
+     * Marca la transferencia como fallida (error temporal, recuperable).
+     * Solo es válido desde estado PROCESSING.
+     * El fallo se puede reintentar más tarde.
+     *
+     * INVARIANTE: Si status == FAILED, failure != null
+     *
+     * @param reason Razón del fallo
+     * @throws InvalidTransferDataException si no está en PROCESSING
      */
     public void markAsFailed(String reason) {
-        validateCanTransition();
-        validateFailureReason(reason);
+        if (status != TransferStatus.PROCESSING) {
+            throw new InvalidTransferDataException(
+                    String.format(DomainErrorMessages.ONLY_PROCESSING_CAN_FAIL, status)
+            );
+        }
+
         this.status = TransferStatus.FAILED;
-        this.failedAt = LocalDateTime.now();
-        this.failureReason = reason;
+        this.failure = TransferFailure.of(reason);
+
+        // Publicar evento de dominio
+        this.domainEvents.add(new TransferFailedEvent(
+                this.id,
+                this.originAccountId,
+                this.targetCbu.value(),
+                this.amount.value(),
+                reason,
+                LocalDateTime.now()
+        ));
     }
 
     /**
-     * Marca la transferencia como rechazada.
-     * Transición: PENDING -> REJECTED
+     * Transición: PROCESSING → REJECTED | FAILED (no retryable) → REJECTED
+     *
+     * Marca la transferencia como rechazada (error permanente, no recuperable).
+     * Es terminal: no se puede reintentar.
+     *
+     * INVARIANTE: Si status == REJECTED, failure != null
+     *
+     * @param reason Razón del rechazo
+     * @throws InvalidTransferDataException si no puede rechazarse desde este estado
      */
     public void markAsRejected(String reason) {
-        validateCanTransition();
-        validateFailureReason(reason);
-        this.status = TransferStatus.REJECTED;
-        this.failedAt = LocalDateTime.now();
-        this.failureReason = reason;
+        // Desde PROCESSING (rechazo inmediato)
+        if (status == TransferStatus.PROCESSING) {
+            this.status = TransferStatus.REJECTED;
+            this.failure = TransferFailure.of(reason);
+            return;
+        }
+
+        // Desde FAILED sin reintentos disponibles (agotamiento de reintentos)
+        if (status == TransferStatus.FAILED && !isRetryable()) {
+            this.status = TransferStatus.REJECTED;
+            this.failure = TransferFailure.of(reason);
+            return;
+        }
+
+        throw new InvalidTransferDataException(
+                String.format(DomainErrorMessages.CANNOT_REJECT_TRANSFER, status)
+        );
     }
 
+    // ==================== QUERY METHODS: STATE CHECKS ====================
+
     /**
-     * Incrementa contador de reintentos.
-     * Usado para rastrear intentos de procesar la transferencia.
+     * ¿Está la transferencia en un estado activo (siendo procesada)?
      */
-    public void incrementRetryCount() {
-        this.retryCount = (this.retryCount == null ? 0 : this.retryCount) + 1;
-        this.lastRetryAt = LocalDateTime.now();
+    public boolean isActive() {
+        return status == TransferStatus.PENDING || status == TransferStatus.PROCESSING;
     }
 
     /**
-     * Verifica si la transferencia es exitosa.
+     * ¿Está la transferencia siendo procesada actualmente?
+     */
+    public boolean isProcessing() {
+        return status == TransferStatus.PROCESSING;
+    }
+
+    /**
+     * ¿Está la transferencia en un estado terminal (completada o rechazada)?
+     */
+    public boolean isTerminal() {
+        return status == TransferStatus.COMPLETED || status == TransferStatus.REJECTED;
+    }
+
+    /**
+     * ¿Se completó la transferencia exitosamente?
      */
     public boolean isSuccessful() {
-        return this.status == TransferStatus.COMPLETED;
+        return status == TransferStatus.COMPLETED;
     }
 
     /**
-     * Verifica si la transferencia puede ser reintentada.
+     * ¿Falló la transferencia (temporalmente)?
      */
-    public boolean canBeRetried() {
-        return this.status == TransferStatus.FAILED &&
-                (this.retryCount == null || this.retryCount < 3);
+    public boolean isFailed() {
+        return status == TransferStatus.FAILED;
     }
 
     /**
-     * Verifica si la transferencia está en estado final.
+     * ¿Fue rechazada la transferencia (permanentemente)?
      */
-    public boolean isFinalized() {
-        return this.status == TransferStatus.COMPLETED ||
-                this.status == TransferStatus.REJECTED;
+    public boolean isRejected() {
+        return status == TransferStatus.REJECTED;
     }
 
-    // ============================================
-    // VALIDACIONES (Private Static)
-    // ============================================
-
-    private static void validateStructuralData(Long id, String idempotencyKey, LocalDateTime createdAt) {
-        if (id == null) {
-            throw new InvalidTransferDataException(DomainErrorMessages.ID_REQUIRED);
-        }
-        validateIdempotencyKey(idempotencyKey);
-        if (createdAt == null) {
-            throw new InvalidTransferDataException(DomainErrorMessages.CREATED_AT_REQUIRED);
-        }
+    /**
+     * ¿Puede reintentarse la transferencia?
+     *
+     * Verdadero si está en FAILED y tiene reintentos disponibles.
+     */
+    public boolean isRetryable() {
+        return status == TransferStatus.FAILED && retryPolicy.isRetryable();
     }
 
-    private static void validateTransferData(Long originAccountId, String targetCbu,
-                                             BigDecimal amount, String description) {
-        validateOriginAccount(originAccountId);
-        validateAmount(amount);
-        validateTarget(targetCbu);
-        validateDescription(description);
+    /**
+     * ¿Puede procesarse esta transferencia ahora?
+     *
+     * Verdadero si está en PENDING o en FAILED con reintentos disponibles.
+     */
+    public boolean isEligibleForProcessing() {
+        return status == TransferStatus.PENDING ||
+                (status == TransferStatus.FAILED && isRetryable());
     }
 
-    private void validateCanTransition() {
-        if (this.status != TransferStatus.PENDING) {
-            throw new InvalidTransferDataException(
-                    DomainErrorMessages.TRANSFER_ALREADY_FINALIZED
-            );
-        }
+    // ==================== GETTERS PARA INFORMACIÓN ====================
+
+    /**
+     * Obtiene la cantidad de reintentos realizados.
+     */
+    public Integer getRetryCount() {
+        return retryPolicy.getRetryCount();
     }
 
-    private static void validateFailureReason(String reason) {
-        if (reason == null || reason.isBlank()) {
-            throw new InvalidTransferDataException(
-                    DomainErrorMessages.TRANSFER_FAILURE_REASON_REQUIRED
-            );
-        }
+    /**
+     * Obtiene la cantidad de reintentos restantes.
+     */
+    public int getRetriesRemaining() {
+        return retryPolicy.retriesRemaining();
     }
 
-    private static void validateIdempotencyKey(String idempotencyKey) {
-        if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            throw new InvalidTransferDataException(DomainErrorMessages.IDEMPOTENCY_KEY_REQUIRED);
-        }
+    /**
+     * Obtiene la fecha del último reintento.
+     */
+    public LocalDateTime getLastRetryAt() {
+        return retryPolicy.getLastRetryAt();
     }
 
-    private static void validateOriginAccount(Long originAccountId) {
-        if (originAccountId == null || originAccountId <= 0) {
-            throw new InvalidTransferDataException(
-                    DomainErrorMessages.ORIGIN_ACCOUNT_ID_INVALID
-            );
-        }
+    /**
+     * Obtiene la razón del fallo (si la transferencia falló).
+     */
+    public String getFailureReason() {
+        return failure != null ? failure.getReason() : null;
     }
 
-    private static void validateAmount(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidTransferDataException(
-                    DomainErrorMessages.TRANSFER_AMOUNT_INVALID
-            );
-        }
+    /**
+     * Obtiene la fecha del fallo (si la transferencia falló).
+     */
+    public LocalDateTime getFailedAt() {
+        return failure != null ? failure.getFailedAt() : null;
     }
 
-    private static void validateTarget(String targetCbu) {
-        if (targetCbu == null || targetCbu.isBlank()) {
-            throw new InvalidTransferDataException(DomainErrorMessages.CBU_REQUIRED);
-        }
-        if (!Pattern.matches(CBU_REGEX, targetCbu)) {
-            throw new InvalidTransferDataException(DomainErrorMessages.CBU_ONLY_NUMBERS);
-        }
-        if (targetCbu.length() != CBU_LENGTH) {
-            throw new InvalidTransferDataException(DomainErrorMessages.CBU_INVALID_LENGTH);
-        }
+    // ==================== EVENT SOURCING ====================
+
+    /**
+     * Obtiene los eventos de dominio publicados.
+     *
+     * Los eventos se publican cuando ocurren cambios de estado importantes.
+     * El publisher es responsable de:
+     * - Persistir estos eventos
+     * - Publicarlos a otros contextos acotados
+     * - Limpiar la lista después de publicar
+     */
+    public List<Object> getDomainEvents() {
+        return new ArrayList<>(domainEvents);
     }
 
-    private static void validateDescription(String description) {
-        if (description == null || description.isBlank()) {
-            throw new InvalidTransferDataException(
-                    DomainErrorMessages.TRANSFER_DESC_REQUIRED
-            );
-        }
+    /**
+     * Limpia los eventos después de ser publicados.
+     *
+     * Debe llamarse después de que el publisher haya procesado los eventos.
+     */
+    public void clearDomainEvents() {
+        domainEvents.clear();
     }
 }

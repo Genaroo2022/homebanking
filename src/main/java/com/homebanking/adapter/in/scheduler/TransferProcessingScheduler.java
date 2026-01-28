@@ -1,6 +1,6 @@
 package com.homebanking.adapter.in.scheduler;
 
-import com.homebanking.application.service.TransferProcessorService;
+import com.homebanking.application.service.transfer.ProcessTransferApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,15 +16,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TransferProcessingScheduler {
 
-    private final TransferProcessorService transferProcessorService;
+    private final ProcessTransferApplicationService processTransferApplicationService;
 
     @Scheduled(fixedDelay = 5000, initialDelay = 10000)
     public void processTransfers() {
-        transferProcessorService.processTransfers();
+        processTransferApplicationService.processTransfers();
     }
 
     @Scheduled(fixedDelay = 30000, initialDelay = 30000)
     public void retryFailedTransfers() {
-        transferProcessorService.retryFailedTransfers();
+        processTransferApplicationService.retryFailedTransfers();
     }
 }

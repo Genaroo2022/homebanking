@@ -24,10 +24,11 @@ public interface CreateTransferInputPort {
 
      * @param request Datos de la transferencia (incluyendo idempotencyKey)
      * @return Transferencia creada con ID asignado
-     * @throws com.homebanking.domain.exception.InvalidTransferDataException Si datos son inválidos
-     * @throws com.homebanking.domain.exception.InvalidAccountDataException Si cuenta no existe
-     * @throws com.homebanking.domain.exception.InsufficientFundsException Si no hay saldo
+     * @throws com.homebanking.domain.exception.transfer.InvalidTransferDataException Si datos son inválidos
+     * @throws com.homebanking.domain.exception.account.InvalidAccountDataException Si cuenta no existe
+     * @throws com.homebanking.domain.exception.transfer.InsufficientFundsException Si no hay saldo
      */
     TransferOutputResponse createTransfer(CreateTransferInputRequest request);
 }
+
 

@@ -8,13 +8,13 @@ class UserMapper {
 
     UserJpaEntity toJpaEntity(User user) {
         UserJpaEntity entity = new UserJpaEntity(
-                user.getName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getPassword(),
-                user.getDni(),
-                user.getBirthDate(),
-                user.getAddress(),
+                user.getName().value(),
+                user.getLastName().value(),
+                user.getEmail().value(),
+                user.getPassword().value(),
+                user.getDni().value(),
+                user.getBirthDate().value(),
+                user.getAddress().value(),
                 user.getCreatedAt()
         );
 

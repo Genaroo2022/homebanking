@@ -2,7 +2,7 @@ package com.homebanking.adapter.out.external.payment.adapter;
 
 import com.homebanking.adapter.out.external.payment.client.TransferProcessorClient;
 import com.homebanking.domain.entity.Transfer;
-import com.homebanking.domain.exception.TransferProcessingException;
+import com.homebanking.domain.exception.transfer.TransferProcessingException;
 import com.homebanking.port.out.TransferProcessorOutputPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,17 +45,17 @@ public class TransferProcessorAdapter implements TransferProcessorOutputPort {
     @Override
     public boolean processTransfer(Transfer transfer) {
         log.info("Procesando transferencia en sistema externo: id={}, targetCbu={}, amount={}",
-                transfer.getId(), transfer.getTargetCbu(), transfer.getAmount());
+                transfer.getId(), transfer.getTargetCbu().value(), transfer.getAmount().value());
 
         try {
             // Llamar al cliente externo con timeout
             boolean result = transferProcessorClient.submitTransfer(
                     transfer.getId(),
                     transfer.getOriginAccountId(),
-                    transfer.getTargetCbu(),
-                    transfer.getAmount(),
-                    transfer.getDescription(),
-                    transfer.getIdempotencyKey()
+                    transfer.getTargetCbu().value(),
+                    transfer.getAmount().value(),
+                    transfer.getDescription().value(),
+                    transfer.getIdempotencyKey().value()
             );
 
             log.debug("Procesamiento externo completado: id={}, result={}",
@@ -89,3 +89,4 @@ public class TransferProcessorAdapter implements TransferProcessorOutputPort {
         }
     }
 }
+

@@ -2,9 +2,10 @@ package com.homebanking.application.usecase;
 
 import com.homebanking.application.dto.registration.request.RegisterUserInputRequest;
 import com.homebanking.application.dto.registration.response.UserRegisteredOutputResponse;
+import com.homebanking.application.usecase.auth.RegisterUserUseCaseImpl;
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.User;
-import com.homebanking.domain.exception.UserAlreadyExistsException;
+import com.homebanking.domain.exception.user.UserAlreadyExistsException;
 import com.homebanking.port.out.AccountRepository;
 import com.homebanking.port.out.PasswordHasher;
 import com.homebanking.port.out.UserRepository;
@@ -102,8 +103,8 @@ class RegisterUserUseCaseImplTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         User savedUserArg = userCaptor.getValue();
-        assertThat(savedUserArg.getEmail()).isEqualTo(request.email());
-        assertThat(savedUserArg.getPassword()).isEqualTo("hashed_password");
+        assertThat(savedUserArg.getEmail().value()).isEqualTo(request.email());
+        assertThat(savedUserArg.getPassword().value()).isEqualTo("hashed_password");
 
         // Verify: Cuenta inicial creada
         verify(accountRepository).save(any(Account.class));
@@ -150,3 +151,4 @@ class RegisterUserUseCaseImplTest {
         verify(accountRepository, never()).save(any(Account.class));
     }
 }
+

@@ -9,9 +9,9 @@ class AccountMapper {
     public AccountJpaEntity toJpaEntity(Account account) {
         AccountJpaEntity entity = new AccountJpaEntity(
                 account.getUserId(),
-                account.getCbu(),
-                account.getAlias(),
-                account.getBalance(),
+                account.getCbu().value(),
+                account.getAlias().value(),
+                account.getBalance().value(),
                 account.getCreatedAt()
         );
 

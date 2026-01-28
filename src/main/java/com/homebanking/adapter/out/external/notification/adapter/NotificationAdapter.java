@@ -42,8 +42,8 @@ public class NotificationAdapter implements NotificationOutputPort {
         log.info("NOTIFICACIÓN - Transferencia completada: " +
                         "id={}, amount={}, targetCbu={}, timestamp={}",
                 transfer.getId(),
-                transfer.getAmount(),
-                transfer.getTargetCbu(),
+                transfer.getAmount().value(),
+                transfer.getTargetCbu().value(),
                 transfer.getExecutedAt());
 
         try {
@@ -77,7 +77,7 @@ public class NotificationAdapter implements NotificationOutputPort {
         log.warn("NOTIFICACIÓN - Transferencia fallida: " +
                         "id={}, amount={}, reason={}, timestamp={}",
                 transfer.getId(),
-                transfer.getAmount(),
+                transfer.getAmount().value(),
                 transfer.getFailureReason(),
                 transfer.getFailedAt());
 

@@ -2,8 +2,9 @@ package com.homebanking.application.usecase;
 
 import com.homebanking.application.dto.authentication.request.LoginInputRequest;
 import com.homebanking.application.dto.authentication.response.TokenOutputResponse;
+import com.homebanking.application.usecase.auth.LoginUserUseCaseImpl;
 import com.homebanking.domain.entity.User;
-import com.homebanking.domain.exception.InvalidUserDataException;
+import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.port.out.PasswordHasher;
 import com.homebanking.port.out.TokenGenerator;
 import com.homebanking.port.out.UserRepository;
@@ -158,3 +159,4 @@ class LoginUserUseCaseImplTest {
         );
     }
 }
+

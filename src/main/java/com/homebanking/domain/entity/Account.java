@@ -1,28 +1,27 @@
 package com.homebanking.domain.entity;
 
-import com.homebanking.domain.exception.InvalidAccountDataException;
+import com.homebanking.domain.exception.account.InvalidAccountDataException;
+import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import com.homebanking.domain.valueobject.account.AccountAlias;
+import com.homebanking.domain.valueobject.account.AccountBalance;
+import com.homebanking.domain.valueobject.common.Cbu;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.regex.Pattern;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account {
 
-    public static final int CBU_LENGTH = 22;
-    private static final String ALIAS_REGEX = "^[a-zA-Z0-9.]{6,20}$";
-    private static final String CBU_REGEX = "^\\d+$";
-
     private Long id;
     private Long userId;
-    private String cbu;
-    private String alias;
-    private BigDecimal balance;
+    private Cbu cbu;
+    private AccountAlias alias;
+    private AccountBalance balance;
     private LocalDateTime createdAt;
 
     // To create a new card (without ID)
@@ -30,9 +29,9 @@ public class Account {
         validateAccountData(userId, cbu, alias, balance);
 
         this.userId = userId;
-        this.cbu = cbu;
-        this.alias = alias;
-        this.balance = balance;
+        this.cbu = createCbu(cbu);
+        this.alias = AccountAlias.of(alias);
+        this.balance = AccountBalance.of(balance);
         this.createdAt = LocalDateTime.now();
     }
 
@@ -40,9 +39,9 @@ public class Account {
     public static Account withId(Long id, Long userId, String cbu, String alias, BigDecimal balance, LocalDateTime createdAt) {
         validateStructuralData(id, createdAt);
         validateAccountData(userId, cbu, alias, balance);
-        return hydrate(id, userId, cbu, alias, balance, createdAt);
+        return hydrate(id, userId, createCbu(cbu), AccountAlias.of(alias), AccountBalance.of(balance), createdAt);
     }
-    private static Account hydrate(Long id, Long userId, String cbu, String alias, BigDecimal balance, LocalDateTime createdAt) {
+    private static Account hydrate(Long id, Long userId, Cbu cbu, AccountAlias alias, AccountBalance balance, LocalDateTime createdAt) {
         Account account = new Account();
         account.id = id;
         account.userId = userId;
@@ -57,16 +56,14 @@ public class Account {
 
     public void deposit(BigDecimal amount) {
         validatePositiveAmount(amount, DomainErrorMessages.DEPOSIT_AMOUNT_MUST_BE_POSITIVE);
-        BigDecimal newBalance = this.balance.add(amount);
-        validateBalance(newBalance);
-        this.balance = newBalance;
+        BigDecimal newBalance = this.balance.value().add(amount);
+        this.balance = AccountBalance.of(newBalance);
     }
 
     public void debit(BigDecimal amount) {
         validatePositiveAmount(amount, DomainErrorMessages.DEBIT_AMOUNT_MUST_BE_POSITIVE);
-        BigDecimal newBalance = this.balance.subtract(amount);
-        validateBalance(newBalance);
-        this.balance = newBalance;
+        BigDecimal newBalance = this.balance.value().subtract(amount);
+        this.balance = AccountBalance.of(newBalance);
     }
 
     // --- VALIDATIONS (Private Static) ---
@@ -82,9 +79,7 @@ public class Account {
 
     private static void validateAccountData(Long userId, String cbu, String alias, BigDecimal balance) {
         validateMandatoryFields(userId, cbu, alias, balance);
-        validateCbuFormat(cbu);
-        validateAliasFormat(alias);
-        validateBalance(balance);
+        validateUserId(userId);
     }
 
     private static void validateNonBlankField(String value, String errorMessage) {
@@ -110,24 +105,18 @@ public class Account {
         }
     }
 
-    private static void validateCbuFormat(String cbu) {
-        if (!Pattern.matches(CBU_REGEX, cbu)) {
-            throw new InvalidAccountDataException(DomainErrorMessages.CBU_ONLY_NUMBERS);
-        }
-        if (cbu.length() != CBU_LENGTH) {
-            throw new InvalidAccountDataException(DomainErrorMessages.CBU_INVALID_LENGTH);
+    private static void validateUserId(Long userId) {
+        if (userId <= 0) {
+            throw new InvalidAccountDataException(DomainErrorMessages.USER_ID_INVALID);
         }
     }
 
-    private static void validateAliasFormat(String alias) {
-        if (!Pattern.matches(ALIAS_REGEX, alias)) {
-            throw new InvalidAccountDataException(DomainErrorMessages.ALIAS_INVALID_FORMAT);
-        }
-    }
-
-    private static void validateBalance(BigDecimal balance) {
-        if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidAccountDataException(DomainErrorMessages.ACCOUNT_BALANCE_NEGATIVE);
+    private static Cbu createCbu(String value) {
+        try {
+            return Cbu.of(value);
+        } catch (InvalidTransferDataException ex) {
+            throw new InvalidAccountDataException(ex.getMessage());
         }
     }
 }
+

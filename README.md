@@ -54,6 +54,9 @@ src/
 - Respuestas de error unificadas con `ErrorResponse` (incluye validaciones).
 - Transferencias se rechazan si la cuenta destino no existe.
 - Concurrencia de saldo protegida con `@Version` en Account JPA.
+- Endpoint interno de deposito (solo `dev`): `POST /accounts/{id}/deposit`.
+- Procesamiento de transferencias disponible en `POST /api/transfers/{id}/process`.
+- Reintentos manuales disponibles en `POST /api/transfers/{id}/retry`.
 
 
 ## 🛠️ Stack Tecnológico
@@ -74,9 +77,9 @@ Utilizo las últimas versiones estables para garantizar un desarrollo empresaria
 
 El diseño actual contempla la implementación modular de las siguientes características:
 
-- [ ] 🔐 **Auth & Seguridad:** Login, implementación de JWT, Filtros de seguridad y Auditoría.
-- [ ] 💰 **Gestión de Cuentas:** Consulta de saldos en tiempo real y generación de CBU.
-- [ ] 💸 **Transacciones:** Transferencias entre terceros con validaciones ACID (atómicas).
+- [x] 🔐 **Auth & Seguridad:** Login, implementación de JWT, Filtros de seguridad y Auditoría.
+- [x] 💰 **Gestión de Cuentas:** Consulta de saldos en tiempo real y generación de CBU.
+- [x] 💸 **Transacciones:** Transferencias entre terceros con validaciones ACID (atómicas).
 - [ ] 🧾 **Pagos:** Módulo de pago de servicios (`BillUseCase`).
 - [ ] 🔔 **Notificaciones:** Integración con adaptadores de Email, SMS y Push.
 - [ ] 💳 **Tarjetas:** Gestión completa de tarjetas de débito/crédito.
@@ -133,15 +136,15 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 
 | Perfil                         | Base de Datos | Docker | Uso Previsto |
 |:-------------------------------| :--- | :---: | :--- |
-| **`dev`** (Default)            | **H2** (Memoria) | ❌ | Desarrollo local rápido. Datos volátiles. Logs en modo `DEBUG`. |
+| **`dev`**                      | **H2** (Memoria) | ❌ | Desarrollo local rápido. Habilita endpoints internos de testing. |
 | **`test`** | **H2** (Reset) | ❌ | **Ejecución de Tests Automáticos** (CI/CD). DB limpia por test. |
 | **`prod`**                     | **PostgreSQL** | ✅ | Despliegue en contenedores. Datos persistentes. Seguridad endurecida. |
 
 ### Cómo ejecutar en diferentes ambientes:
 
-**Modo Desarrollo (Por defecto):**
+**Modo Desarrollo (con profile `dev`):**
 ```bash
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 **Testing (Automático): Ejecuta la batería de pruebas unitarias y de integración.**
 ```bash
@@ -174,25 +177,20 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 }
 ```
 ### 2️⃣ Iniciar Sesión (Obtener Token)
-* **Endpoint:** `POST` `/auth` `/login`
+* **Endpoint:** `POST` `/auth/login`
 * **Body:**
 
 ```json
 
 {
-  "name": "Lionel",
-  "lastName": "Messi",
   "email": "lio@messi.com",
-  "password": "SecurePass123!",
-  "dni": "10101010",
-  "birthDate": "1987-06-24",
-  "address": "Miami, USA"
+  "password": "SecurePass123!"
 }
 ```
 **💡 Respuesta: Recibirás un token JWT. Cópialo para usarlo en el siguiente paso.**
 
 ### 3️⃣ Ver Mi Perfil y Cuentas (Endpoint Seguro)
-* **Endpoint:** `GET` `/auth` `/me`
+* **Endpoint:** `GET` `/auth/me`
 * **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
 
 
@@ -213,6 +211,35 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 ]
 }
 ```
+
+### 4️⃣ Cargar Saldo (Solo DEV)
+* **Endpoint:** `POST` `/accounts/{id}/deposit`
+* **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
+* **Body:**
+```json
+{
+  "amount": 1000.00
+}
+```
+
+### 5️⃣ Crear Transferencia
+* **Endpoint:** `POST` `/api/transfers`
+* **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
+* **Body:**
+```json
+{
+  "originAccountId": 1,
+  "targetCbu": "1234567890123456789012",
+  "amount": 150.50,
+  "description": "Pago alquiler",
+  "idempotencyKey": "{{$guid}}"
+}
+```
+
+### 6️⃣ Procesar / Reintentar / Consultar Transferencia
+* `POST /api/transfers/{id}/process`
+* `POST /api/transfers/{id}/retry`
+* `GET /api/transfers/{id}`
 # 🧪 Testing
 * **Ejecutar Tests Unitarios**
 ```bash
@@ -257,7 +284,7 @@ bash#
 | **Identity** | Registro de Usuario & Validaciones   | ✅ **Production Ready**                                                    | `POST /users`      |
 | **Security** | Autenticación JWT & Stateless        | ✅ **Production Ready**                                                    | `POST /auth/login` |
 | **Accounts** | Persistencia, Relaciones y Consultas | ✅ **Production Ready**                                                                         | `GET /auth/me`                 |
-| **Payments** | Transferencias Atómicas (ACID)       | 🚧 Core Implemented                                                       | `POST /transfers`  |
+| **Payments** | Transferencias Atómicas (ACID)       | ✅ **Core Implemented**                                                   | `POST /api/transfers`  |
 | **Cards** | Emisión y Lógica de Luhn             | 🚧 Core Implemented                                                       | `POST /cards`      |
 
  **Genaro Rotstein** | **Software Engineer**

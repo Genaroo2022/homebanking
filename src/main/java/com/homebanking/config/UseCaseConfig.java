@@ -1,8 +1,8 @@
 package com.homebanking.config;
 
-import com.homebanking.application.usecase.LoginUserUseCaseImpl;
-import com.homebanking.application.usecase.GetUserProfileUseCaseImpl;
-import com.homebanking.application.usecase.RegisterUserUseCaseImpl;
+import com.homebanking.application.usecase.auth.LoginUserUseCaseImpl;
+import com.homebanking.application.usecase.user.GetUserProfileUseCaseImpl;
+import com.homebanking.application.usecase.auth.RegisterUserUseCaseImpl;
 import com.homebanking.port.in.authentication.LoginUserInputPort;
 import com.homebanking.port.in.authentication.GetUserProfileInputPort;
 import com.homebanking.port.in.registration.RegisterUserInputPort;

@@ -2,7 +2,6 @@ package com.homebanking.adapter.out.persistence.transfer;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.homebanking.domain.enums.TransferStatus;
 import java.util.List;
@@ -37,8 +36,7 @@ interface SpringDataTransferRepository extends JpaRepository<TransferJpaEntity, 
      * Obtiene transferencias fallidas que pueden ser reintentadas.
      * Limita a 100 registros para evitar sobrecargar el servicio de reintentos.
      */
-    @Query("SELECT t FROM TransferJpaEntity t " +
-            "WHERE t.status = 'FAILED' AND t.retryCount < 3 " +
-            "ORDER BY t.lastRetryAt ASC LIMIT 100")
-    List<TransferJpaEntity> findRetryableTransfers();
+    List<TransferJpaEntity> findTop100ByStatusAndRetryCountLessThanOrderByLastRetryAtAsc(
+            TransferStatus status,
+            Integer retryCount);
 }

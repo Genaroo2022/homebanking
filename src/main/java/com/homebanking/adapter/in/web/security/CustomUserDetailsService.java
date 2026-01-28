@@ -30,8 +30,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 });
         log.debug("UserDetails cargado para: {}", email);
         return new User(
-                domainUser.getEmail(),
-                domainUser.getPassword(),
+                domainUser.getEmail().value(),
+                domainUser.getPassword().value(),
                 Collections.emptyList()
         );
     }

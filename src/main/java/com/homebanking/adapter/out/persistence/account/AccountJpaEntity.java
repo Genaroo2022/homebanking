@@ -28,6 +28,7 @@ class AccountJpaEntity {
     private String alias;
 
     @Column(nullable = false)
+    @Setter(AccessLevel.PACKAGE)
     private BigDecimal balance;
 
     @Column(nullable = false, updatable = false)

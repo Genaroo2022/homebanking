@@ -34,11 +34,11 @@ public class TransferWebMapper {
      */
     public CreateTransferInputRequest toInputRequest(CreateTransferRequest request) {
         return new CreateTransferInputRequest(
-                request.getOriginAccountId(),
-                request.getTargetCbu(),
-                request.getAmount(),
-                request.getDescription(),
-                request.getIdempotencyKey()
+                request.originAccountId(),
+                request.targetCbu(),
+                request.amount(),
+                request.description(),
+                request.idempotencyKey()
         );
     }
 

@@ -2,9 +2,17 @@ package com.homebanking.application.usecase;
 
 import com.homebanking.application.dto.transfer.request.CreateTransferInputRequest;
 import com.homebanking.application.dto.transfer.response.TransferOutputResponse;
+import com.homebanking.application.usecase.transfer.CreateTransferUseCaseImpl;
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.Transfer;
-import com.homebanking.domain.exception.*;
+import com.homebanking.domain.exception.account.AccountNotFoundException;
+import com.homebanking.domain.exception.transfer.InsufficientFundsException;
+import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
+import com.homebanking.domain.exception.transfer.SameAccountTransferException;
+import com.homebanking.domain.valueobject.common.Cbu;
+import com.homebanking.domain.valueobject.transfer.IdempotencyKey;
+import com.homebanking.domain.valueobject.transfer.TransferAmount;
+import com.homebanking.domain.valueobject.transfer.TransferDescription;
 import com.homebanking.port.out.AccountRepository;
 import com.homebanking.port.out.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -103,6 +110,41 @@ class CreateTransferUseCaseImplTest {
                 .thenReturn(Optional.empty());
         when(accountRepository.findById(originAccountId))
                 .thenReturn(Optional.of(originAccount));
+        when(accountRepository.findByCbu(request.targetCbu()))
+                .thenReturn(Optional.of(createTestAccount(
+                        2L,
+                        request.targetCbu(),
+                        "dest.user.004",
+                        BigDecimal.ZERO
+                )));
+        when(accountRepository.findByCbu(request.targetCbu()))
+                .thenReturn(Optional.of(createTestAccount(
+                        2L,
+                        request.targetCbu(),
+                        "dest.user.004",
+                        BigDecimal.ZERO
+                )));
+        when(accountRepository.findByCbu(request.targetCbu()))
+                .thenReturn(Optional.of(createTestAccount(
+                        2L,
+                        request.targetCbu(),
+                        "dest.user.004",
+                        BigDecimal.ZERO
+                )));
+        when(accountRepository.findByCbu(request.targetCbu()))
+                .thenReturn(Optional.of(createTestAccount(
+                        2L,
+                        request.targetCbu(),
+                        "dest.user.003",
+                        BigDecimal.ZERO
+                )));
+        when(accountRepository.findByCbu(request.targetCbu()))
+                .thenReturn(Optional.of(createTestAccount(
+                        2L,
+                        request.targetCbu(),
+                        "dest.user.001",
+                        BigDecimal.ZERO
+                )));
         when(accountRepository.findByCbu(targetCbu))
                 .thenReturn(Optional.of(destinationAccount));
         when(transferRepository.save(any(Transfer.class)))
@@ -126,7 +168,7 @@ class CreateTransferUseCaseImplTest {
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(accountCaptor.capture());
         Account savedAccount = accountCaptor.getValue();
-        assertThat(savedAccount.getBalance()).isEqualTo(new BigDecimal("400.00"));
+        assertThat(savedAccount.getBalance().value()).isEqualTo(new BigDecimal("400.00"));
 
         verify(transferRepository).save(any(Transfer.class));
     }
@@ -211,6 +253,13 @@ class CreateTransferUseCaseImplTest {
                 .thenReturn(Optional.empty());
         when(accountRepository.findById(originAccountId))
                 .thenReturn(Optional.of(originAccount));
+        when(accountRepository.findByCbu(request.targetCbu()))
+                .thenReturn(Optional.of(createTestAccount(
+                        2L,
+                        request.targetCbu(),
+                        "dest.user.004",
+                        BigDecimal.ZERO
+                )));
 
         // Act & Assert
         assertThatThrownBy(() -> createTransferUseCase.createTransfer(request))
@@ -258,6 +307,8 @@ class CreateTransferUseCaseImplTest {
         when(transferRepository.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.empty());
         when(accountRepository.findById(1L))
+                .thenReturn(Optional.of(originAccount));
+        when(accountRepository.findByCbu(sameCbu))
                 .thenReturn(Optional.of(originAccount));
 
         // Act & Assert
@@ -332,6 +383,13 @@ class CreateTransferUseCaseImplTest {
                 .thenReturn(Optional.empty());
         when(accountRepository.findById(1L))
                 .thenReturn(Optional.of(originAccount));
+        when(accountRepository.findByCbu(invalidCbu))
+                .thenReturn(Optional.of(createTestAccount(
+                        2L,
+                        "1234567890123456789012",
+                        "dest.user.002",
+                        BigDecimal.ZERO
+                )));
 
         // Act & Assert
         assertThatThrownBy(() -> createTransferUseCase.createTransfer(request))
@@ -356,13 +414,13 @@ class CreateTransferUseCaseImplTest {
     }
 
     private Transfer createTestTransfer(Long id, CreateTransferInputRequest request) {
-        return Transfer.withId(
+        return Transfer.reconstruct(
                 id,
-                request.idempotencyKey(),
+                IdempotencyKey.of(request.idempotencyKey()),
                 request.originAccountId(),
-                request.targetCbu(),
-                request.amount(),
-                request.description(),
+                Cbu.of(request.targetCbu()),
+                TransferAmount.of(request.amount()),
+                TransferDescription.of(request.description()),
                 com.homebanking.domain.enums.TransferStatus.PENDING,
                 LocalDateTime.now(),
                 null,

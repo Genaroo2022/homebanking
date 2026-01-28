@@ -16,7 +16,7 @@ public interface TransferProcessorOutputPort {
      *
      * @param transfer Transferencia a procesar
      * @return true si fue procesada exitosamente, false en caso contrario
-     * @throws com.homebanking.domain.exception.TransferProcessingException Si error irrecuperable
+     * @throws com.homebanking.domain.exception.transfer.TransferProcessingException Si error irrecuperable
      */
     boolean processTransfer(Transfer transfer);
 }

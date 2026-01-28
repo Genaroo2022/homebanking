@@ -74,7 +74,11 @@ class TransferPersistenceAdapter implements TransferRepository {
 
     @Override
     public List<Transfer> findRetryableTransfers() {
-        return springDataRepository.findRetryableTransfers()
+        return springDataRepository
+                .findTop100ByStatusAndRetryCountLessThanOrderByLastRetryAtAsc(
+                        com.homebanking.domain.enums.TransferStatus.FAILED,
+                        3
+                )
                 .stream()
                 .map(transferMapper::toDomain)
                 .collect(Collectors.toList());

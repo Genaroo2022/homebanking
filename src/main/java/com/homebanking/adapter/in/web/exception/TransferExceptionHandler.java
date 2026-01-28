@@ -1,8 +1,16 @@
 package com.homebanking.adapter.in.web.exception;
 
 import com.homebanking.adapter.in.web.response.ErrorResponse;
-import com.homebanking.domain.exception.*;
+import com.homebanking.domain.exception.account.AccountNotFoundException;
+import com.homebanking.domain.exception.transfer.InsufficientFundsException;
+import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
+import com.homebanking.domain.exception.transfer.SameAccountTransferException;
+import com.homebanking.domain.exception.transfer.TransferNotFoundException;
+import com.homebanking.domain.exception.transfer.TransferProcessingException;
+import com.homebanking.domain.exception.transfer.DestinationAccountNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,6 +29,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * • Rastreabilidad para debugging
  */
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
 public class TransferExceptionHandler {
 
@@ -66,6 +75,48 @@ public class TransferExceptionHandler {
         ErrorResponse error = ErrorResponse.of(
                 "ACCOUNT_NOT_FOUND",
                 "La cuenta especificada no existe en el sistema"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    /**
+     * Manejar: TransferNotFoundException
+     *
+     * Status: 404 Not Found
+     */
+    @ExceptionHandler(TransferNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTransferNotFound(
+            TransferNotFoundException ex) {
+
+        log.warn("Transferencia no encontrada: {}", ex.getTransferId());
+
+        ErrorResponse error = ErrorResponse.of(
+                "TRANSFER_NOT_FOUND",
+                "La transferencia especificada no existe"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    /**
+     * Manejar: DestinationAccountNotFoundException
+     *
+     * Status: 404 Not Found
+     */
+    @ExceptionHandler(DestinationAccountNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDestinationAccountNotFound(
+            DestinationAccountNotFoundException ex) {
+
+        log.warn("Cuenta destino no encontrada: {}", ex.getTargetCbu());
+
+        ErrorResponse error = ErrorResponse.of(
+                "DESTINATION_ACCOUNT_NOT_FOUND",
+                "La cuenta destino especificada no existe en el sistema"
         );
 
         return ResponseEntity

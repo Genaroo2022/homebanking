@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public record TransferCompletedEvent(
         Long transferId,
         Long sourceAccountId,
-        Long destinationAccountId,
+        String targetCbu,
         BigDecimal amount,
         LocalDateTime completedAt
 ) {}
