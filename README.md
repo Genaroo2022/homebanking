@@ -17,35 +17,40 @@ El código sigue una organización semántica clara:
 
 ```text
 src/
-├── main/java/com/homebanking/
-│   ├── application
-│   │   ├── dto          # Request/Response records
-│   │   └── usecase      # Logica de aplicacion (Casos de Uso)
-│   ├── domain
-│   │   ├── entity       # Entidades del nucleo (sin dependencias)
-│   │   ├── service      # Servicios de dominio
-│   │   └── exception    # Excepciones de dominio
-│   ├── port
-│   │   ├── in           # Interfaces de entrada
-│   │   └── out          # Interfaces de salida
-│   ├── adapter
-│   │   ├── in
-│   │   │   ├── web        # Controllers, Filters (JWT) y Mappers
-│   │   │   └── scheduler  # Jobs programados (procesamiento asincrono)
-│   │   └── out
-│   │       ├── persistence # JPA Repositories & Entities
-│   │       ├── external
-│   │       │   ├── audit        # Adaptador de Auditoria
-│   │       │   ├── notification # Email/SMS
-│   │       │   └── security     # Adaptador de Seguridad (e.g. validación externa)
-│   │       └── security    # Hash de contrasenas (puerto out)
-│   └── config           # Beans de Spring (Security, OpenAPI, Persistence)
-│
-└── test/java/com/homebanking/
-    ├── application      # Unit Tests de Casos de Uso
-    ├── domain           # Unit Tests de Entidades/Servicios
-    ├── adapter          # Slice Tests (Controllers/Repositories)
-    └── integration      # Tests de integracion end-to-end
+└── main/
+    ├── java/com/homebanking/
+    │   ├── adapter
+    │   │   ├── in
+    │   │   │   ├── event/         # Listeners de Eventos (ej. TransferEventListener)
+    │   │   │   ├── scheduler/     # Tareas Programadas (ej. TransferProcessingScheduler)
+    │   │   │   └── web/           # Controladores REST, Handlers de Excepciones, Mappers, etc.
+    │   │   └── out
+    │   │       ├── event/         # Implementaciones de Publicadores de Eventos
+    │   │       ├── external/      # Adaptadores para servicios externos (pagos, notificaciones)
+    │   │       ├── persistence/   # Implementaciones JPA de repositorios
+    │   │       └── security/      # Implementación de PasswordHasher
+    │   ├── application
+    │   │   ├── dto/             # DTOs para casos de uso
+    │   │   ├── service/         # Servicios de aplicación que orquestan casos de uso
+    │   │   └── usecase/         # Implementaciones de casos de uso
+    │   ├── config/              # Beans de configuración de Spring
+    │   ├── domain
+    │   │   ├── entity/          # Entidades de dominio (ej. Account, Transfer)
+    │   │   ├── enums/           # Enumeraciones específicas del dominio
+    │   │   ├── event/           # Definiciones de eventos de dominio
+    │   │   ├── exception/       # Excepciones de dominio personalizadas
+    │   │   ├── policy/          # Políticas de dominio (ej. transiciones de estado)
+    │   │   ├── service/         # Servicios de dominio
+    │   │   └── valueobject/     # Value Objects de dominio
+    │   ├── port
+    │   │   ├── in/              # Puertos de entrada (interfaces de casos de uso)
+    │   │   └── out/             # Puertos de salida (interfaces de repositorios, servicios)
+    │   └── HomebankingApplication.java
+    └── resources/
+        ├── db/migration/      # Migraciones de base de datos (Flyway/Liquibase)
+        ├── static/
+        ├── templates/
+        └── application.properties
 ```
 
 ### Notas de implementacion actuales
