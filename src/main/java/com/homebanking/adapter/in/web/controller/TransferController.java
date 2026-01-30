@@ -6,7 +6,6 @@ import com.homebanking.adapter.in.web.response.TransferResponse;
 import com.homebanking.application.dto.transfer.response.TransferOutputResponse;
 import com.homebanking.port.in.transfer.CreateTransferInputPort;
 import com.homebanking.port.in.transfer.GetTransferInputPort;
-import com.homebanking.port.in.transfer.ProcessTransferInputPort;
 import com.homebanking.port.in.transfer.RetryTransferInputPort;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -25,7 +24,6 @@ public class TransferController {
 
     private final CreateTransferInputPort createTransferUseCase;
     private final GetTransferInputPort getTransferUseCase;
-    private final ProcessTransferInputPort processTransferUseCase;
     private final RetryTransferInputPort retryFailedTransferUseCase;
     private final TransferWebMapper transferWebMapper;
 
@@ -39,12 +37,6 @@ public class TransferController {
         return ResponseEntity
                 .created(URI.create("/api/transfers/" + output.id()))
                 .body(transferWebMapper.toResponse(output));
-    }
-
-    @PostMapping("/{id}/process")
-    public ResponseEntity<TransferResponse> processTransferEndpoint(@PathVariable("id") Long transferId) {
-        TransferOutputResponse output = processTransferUseCase.processTransfer(transferId);
-        return ResponseEntity.ok(transferWebMapper.toResponse(output));
     }
 
     @PostMapping("/{id}/retry")

@@ -11,6 +11,7 @@ import com.homebanking.port.in.transfer.GetTransferInputPort;
 import com.homebanking.port.in.transfer.ProcessTransferInputPort;
 import com.homebanking.port.in.transfer.RetryTransferInputPort;
 import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.EventPublisher;
 import com.homebanking.port.out.NotificationOutputPort;
 import com.homebanking.port.out.TransferProcessorOutputPort;
 import com.homebanking.port.out.TransferRepository;
@@ -45,10 +46,12 @@ public class TransferConfig {
     @Bean
     public CreateTransferInputPort createTransferUseCase(
             AccountRepository accountRepository,
-            TransferRepository transferRepository) {
+            TransferRepository transferRepository,
+            EventPublisher eventPublisher) {
         return new CreateTransferUseCaseImpl(
                 accountRepository,
-                transferRepository
+                transferRepository,
+                eventPublisher
         );
     }
 

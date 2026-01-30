@@ -8,6 +8,7 @@ import com.homebanking.domain.exception.account.AccountNotFoundException;
 import com.homebanking.domain.exception.transfer.DestinationAccountNotFoundException;
 import com.homebanking.domain.exception.transfer.InsufficientFundsException;
 import com.homebanking.domain.exception.transfer.SameAccountTransferException;
+import com.homebanking.domain.event.TransferCreatedEvent;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.domain.valueobject.common.Cbu;
 import com.homebanking.domain.valueobject.transfer.IdempotencyKey;
@@ -15,6 +16,7 @@ import com.homebanking.domain.valueobject.transfer.TransferAmount;
 import com.homebanking.domain.valueobject.transfer.TransferDescription;
 import com.homebanking.port.in.transfer.CreateTransferInputPort;
 import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.EventPublisher;
 import com.homebanking.port.out.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
 
     private final AccountRepository accountRepository;
     private final TransferRepository transferRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -49,6 +52,8 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
 
         Transfer savedTransfer = persistTransferAndAccount(transfer, originAccount);
         logTransferCreated(savedTransfer);
+
+        eventPublisher.publish(new TransferCreatedEvent(savedTransfer.getId()));
 
         return toOutputResponse(savedTransfer);
     }

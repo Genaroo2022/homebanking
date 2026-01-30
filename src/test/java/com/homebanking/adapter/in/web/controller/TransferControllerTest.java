@@ -50,13 +50,11 @@ class TransferControllerTest {
         TransferController transferController(
                 CreateTransferInputPort createTransferUseCase,
                 GetTransferInputPort getTransferUseCase,
-                ProcessTransferInputPort processTransferUseCase,
                 RetryTransferInputPort retryFailedTransferUseCase,
                 TransferWebMapper transferWebMapper) {
             return new TransferController(
                     createTransferUseCase,
                     getTransferUseCase,
-                    processTransferUseCase,
                     retryFailedTransferUseCase,
                     transferWebMapper
             );
@@ -70,11 +68,6 @@ class TransferControllerTest {
         @Bean
         GetTransferInputPort getTransferInputPort() {
             return Mockito.mock(GetTransferInputPort.class);
-        }
-
-        @Bean
-        ProcessTransferInputPort processTransferInputPort() {
-            return Mockito.mock(ProcessTransferInputPort.class);
         }
 
         @Bean

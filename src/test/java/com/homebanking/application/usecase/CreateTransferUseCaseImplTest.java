@@ -14,6 +14,7 @@ import com.homebanking.domain.valueobject.transfer.IdempotencyKey;
 import com.homebanking.domain.valueobject.transfer.TransferAmount;
 import com.homebanking.domain.valueobject.transfer.TransferDescription;
 import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.EventPublisher;
 import com.homebanking.port.out.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,13 +53,17 @@ class CreateTransferUseCaseImplTest {
     @Mock
     private TransferRepository transferRepository;
 
+    @Mock
+    private EventPublisher eventPublisher;
+
     private CreateTransferUseCaseImpl createTransferUseCase;
 
     @BeforeEach
     void setUp() {
         createTransferUseCase = new CreateTransferUseCaseImpl(
                 accountRepository,
-                transferRepository
+                transferRepository,
+                eventPublisher
         );
     }
 
@@ -171,6 +176,7 @@ class CreateTransferUseCaseImplTest {
         assertThat(savedAccount.getBalance().value()).isEqualTo(new BigDecimal("400.00"));
 
         verify(transferRepository).save(any(Transfer.class));
+        verify(eventPublisher).publish(any(com.homebanking.domain.event.TransferCreatedEvent.class));
     }
 
     /**

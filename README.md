@@ -55,7 +55,7 @@ src/
 - Transferencias se rechazan si la cuenta destino no existe.
 - Concurrencia de saldo protegida con `@Version` en Account JPA.
 - Endpoint interno de deposito (solo `dev`): `POST /accounts/{id}/deposit`.
-- Procesamiento de transferencias disponible en `POST /api/transfers/{id}/process`.
+- El procesamiento de transferencias es asíncrono. Al crear una transferencia, su estado inicial es `PENDING` y se procesa automáticamente en segundo plano.
 - Reintentos manuales disponibles en `POST /api/transfers/{id}/retry`.
 
 
@@ -223,6 +223,8 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 ```
 
 ### 5️⃣ Crear Transferencia
+> **Nota:** Al crear la transferencia, su estado inicial será `PENDING`. El procesamiento se realiza automáticamente en segundo plano.
+
 * **Endpoint:** `POST` `/api/transfers`
 * **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
 * **Body:**
@@ -236,10 +238,13 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 }
 ```
 
-### 6️⃣ Procesar / Reintentar / Consultar Transferencia
-* `POST /api/transfers/{id}/process`
-* `POST /api/transfers/{id}/retry`
-* `GET /api/transfers/{id}`
+### 6️⃣ Consultar o Reintentar una Transferencia
+El procesamiento de la transferencia se inicia automáticamente en segundo plano después de la creación. Para conocer su estado final, puedes usar los siguientes endpoints:
+
+* **Consultar el estado de una transferencia:**
+    * `GET /api/transfers/{id}`
+* **Reintentar una transferencia que ha fallado:**
+    * `POST /api/transfers/{id}/retry`
 # 🧪 Testing
 * **Ejecutar Tests Unitarios**
 ```bash
