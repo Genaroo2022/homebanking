@@ -7,6 +7,7 @@ import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.exception.transfer.TransferNotFoundException;
 import com.homebanking.domain.exception.transfer.TransferProcessingException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import com.homebanking.port.in.transfer.ProcessTransferInputPort;
 import com.homebanking.port.out.AccountRepository;
 import com.homebanking.port.out.NotificationOutputPort;
 import com.homebanking.port.out.TransferProcessorOutputPort;
@@ -19,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 
 @RequiredArgsConstructor
 @Slf4j
-public class ProcessTransferUseCaseImpl implements ProcessTransferUseCase {
+public class ProcessTransferUseCaseImpl implements ProcessTransferInputPort {
 
     private final TransferRepository transferRepository;
     private final AccountRepository accountRepository;

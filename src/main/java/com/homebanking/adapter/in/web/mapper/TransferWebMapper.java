@@ -32,13 +32,15 @@ public class TransferWebMapper {
     /**
      * Convierte CreateTransferRequest HTTP a CreateTransferInputRequest (DTO del use case).
      */
-    public CreateTransferInputRequest toInputRequest(CreateTransferRequest request) {
+    public CreateTransferInputRequest toInputRequest(
+            CreateTransferRequest request,
+            String idempotencyKey) {
         return new CreateTransferInputRequest(
                 request.originAccountId(),
                 request.targetCbu(),
                 request.amount(),
                 request.description(),
-                request.idempotencyKey()
+                idempotencyKey
         );
     }
 

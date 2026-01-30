@@ -23,7 +23,6 @@ public class UserController {
     private final RegisterUserInputPort registerUserUseCase;
     private final UserWebMapper userWebMapper;
 
-
     @PostMapping
     public ResponseEntity<Map<String, Long>> register(
             @Valid @RequestBody RegisterUserRequest request) {

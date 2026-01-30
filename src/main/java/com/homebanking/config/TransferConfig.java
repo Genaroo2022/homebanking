@@ -2,14 +2,14 @@
 package com.homebanking.config;
 
 import com.homebanking.application.service.transfer.ProcessTransferApplicationService;
-import com.homebanking.application.usecase.transfer.CreateTransferUseCase;
 import com.homebanking.application.usecase.transfer.CreateTransferUseCaseImpl;
-import com.homebanking.application.usecase.transfer.GetTransferUseCase;
 import com.homebanking.application.usecase.transfer.GetTransferUseCaseImpl;
-import com.homebanking.application.usecase.transfer.ProcessTransferUseCase;
 import com.homebanking.application.usecase.transfer.ProcessTransferUseCaseImpl;
-import com.homebanking.application.usecase.transfer.RetryFailedTransferUseCase;
 import com.homebanking.application.usecase.transfer.RetryFailedTransferUseCaseImpl;
+import com.homebanking.port.in.transfer.CreateTransferInputPort;
+import com.homebanking.port.in.transfer.GetTransferInputPort;
+import com.homebanking.port.in.transfer.ProcessTransferInputPort;
+import com.homebanking.port.in.transfer.RetryTransferInputPort;
 import com.homebanking.port.out.AccountRepository;
 import com.homebanking.port.out.NotificationOutputPort;
 import com.homebanking.port.out.TransferProcessorOutputPort;
@@ -43,7 +43,7 @@ public class TransferConfig {
      * Inyecta sus dependencias: repositories y ports.
      */
     @Bean
-    public CreateTransferUseCase createTransferUseCase(
+    public CreateTransferInputPort createTransferUseCase(
             AccountRepository accountRepository,
             TransferRepository transferRepository) {
         return new CreateTransferUseCaseImpl(
@@ -53,7 +53,7 @@ public class TransferConfig {
     }
 
     @Bean
-    public GetTransferUseCase getTransferUseCase(TransferRepository transferRepository) {
+    public GetTransferInputPort getTransferUseCase(TransferRepository transferRepository) {
         return new GetTransferUseCaseImpl(transferRepository);
     }
 
@@ -67,7 +67,7 @@ public class TransferConfig {
      * • NotificationOutputPort (para notificar usuarios)
      */
     @Bean
-    public ProcessTransferUseCase processTransferUseCase(
+    public ProcessTransferInputPort processTransferUseCase(
             TransferRepository transferRepository,
             AccountRepository accountRepository,
             TransferProcessorOutputPort transferProcessor,
@@ -81,9 +81,9 @@ public class TransferConfig {
     }
 
     @Bean
-    public RetryFailedTransferUseCase retryFailedTransferUseCase(
+    public RetryTransferInputPort retryFailedTransferUseCase(
             TransferRepository transferRepository,
-            ProcessTransferUseCase processTransferUseCase) {
+            ProcessTransferInputPort processTransferUseCase) {
         return new RetryFailedTransferUseCaseImpl(
                 transferRepository,
                 processTransferUseCase
@@ -93,8 +93,8 @@ public class TransferConfig {
     @Bean
     public ProcessTransferApplicationService transferProcessorService(
             TransferRepository transferRepository,
-            ProcessTransferUseCase processTransferUseCase,
-            RetryFailedTransferUseCase retryFailedTransferUseCase) {
+            ProcessTransferInputPort processTransferUseCase,
+            RetryTransferInputPort retryFailedTransferUseCase) {
         return new ProcessTransferApplicationService(
                 transferRepository,
                 processTransferUseCase,

@@ -194,7 +194,7 @@ public class Transfer {
      *
      * Marca la transferencia como completada exitosamente.
      * Solo es válido desde estado PROCESSING.
-     *
+
      * INVARIANTE: Si status == COMPLETED, executedAt != null
      *
      * @throws InvalidTransferDataException si no está en PROCESSING
@@ -221,11 +221,11 @@ public class Transfer {
 
     /**
      * Transición: PROCESSING → FAILED
-     *
+
      * Marca la transferencia como fallida (error temporal, recuperable).
      * Solo es válido desde estado PROCESSING.
      * El fallo se puede reintentar más tarde.
-     *
+
      * INVARIANTE: Si status == FAILED, failure != null
      *
      * @param reason Razón del fallo
@@ -254,10 +254,10 @@ public class Transfer {
 
     /**
      * Transición: PROCESSING → REJECTED | FAILED (no retryable) → REJECTED
-     *
+
      * Marca la transferencia como rechazada (error permanente, no recuperable).
      * Es terminal: no se puede reintentar.
-     *
+
      * INVARIANTE: Si status == REJECTED, failure != null
      *
      * @param reason Razón del rechazo
@@ -329,7 +329,7 @@ public class Transfer {
 
     /**
      * ¿Puede reintentarse la transferencia?
-     *
+
      * Verdadero si está en FAILED y tiene reintentos disponibles.
      */
     public boolean isRetryable() {
@@ -338,7 +338,7 @@ public class Transfer {
 
     /**
      * ¿Puede procesarse esta transferencia ahora?
-     *
+
      * Verdadero si está en PENDING o en FAILED con reintentos disponibles.
      */
     public boolean isEligibleForProcessing() {
@@ -387,7 +387,7 @@ public class Transfer {
 
     /**
      * Obtiene los eventos de dominio publicados.
-     *
+
      * Los eventos se publican cuando ocurren cambios de estado importantes.
      * El publisher es responsable de:
      * - Persistir estos eventos
@@ -400,7 +400,7 @@ public class Transfer {
 
     /**
      * Limpia los eventos después de ser publicados.
-     *
+
      * Debe llamarse después de que el publisher haya procesado los eventos.
      */
     public void clearDomainEvents() {

@@ -1,8 +1,8 @@
 package com.homebanking.application.service.transfer;
 
-import com.homebanking.application.usecase.transfer.ProcessTransferUseCase;
-import com.homebanking.application.usecase.transfer.RetryFailedTransferUseCase;
 import com.homebanking.domain.entity.Transfer;
+import com.homebanking.port.in.transfer.ProcessTransferInputPort;
+import com.homebanking.port.in.transfer.RetryTransferInputPort;
 import com.homebanking.port.out.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +20,8 @@ import java.util.List;
 public class ProcessTransferApplicationService {
 
     private final TransferRepository transferRepository;
-    private final ProcessTransferUseCase processTransferUseCase;
-    private final RetryFailedTransferUseCase retryFailedTransferUseCase;
+    private final ProcessTransferInputPort processTransferUseCase;
+    private final RetryTransferInputPort retryFailedTransferUseCase;
 
     @Transactional
     public void processTransfers() {

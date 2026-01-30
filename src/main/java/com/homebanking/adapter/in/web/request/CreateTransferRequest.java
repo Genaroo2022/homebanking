@@ -15,21 +15,19 @@ import java.math.BigDecimal;
  * - Campos requeridos
  * - Formato de CBU (se valida en dominio)
  * - Monto positivo
- * - idempotencyKey único (previene duplicados)
+ * - idempotencyKey via header "Idempotency-Key"
 
  * Ejemplo JSON:
  * {
  *   "originAccountId": 1,
  *   "targetCbu": "1234567890123456789012",
  *   "amount": 100.50,
- *   "description": "Pago de servicios",
- *   "idempotencyKey": "550e8400-e29b-41d4-a716-446655440000"
+ *   "description": "Pago de servicios"
  * }
  */
 public record CreateTransferRequest(
         @NotNull Long originAccountId,
         @NotBlank String targetCbu,
         @NotNull @DecimalMin("0.01") BigDecimal amount,
-        @NotBlank String description,
-        @NotBlank String idempotencyKey
+        @NotBlank String description
 ) {}

@@ -4,7 +4,6 @@ import com.homebanking.adapter.in.web.request.DepositAccountRequest;
 import com.homebanking.adapter.in.web.response.DepositAccountResponse;
 import com.homebanking.application.dto.account.request.DepositAccountInputRequest;
 import com.homebanking.application.dto.account.response.DepositAccountOutputResponse;
-import com.homebanking.application.usecase.account.DepositAccountUseCase;
 import com.homebanking.port.in.account.DepositAccountInputPort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,25 +19,20 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("dev")
 @RequestMapping("/accounts")
 @RequiredArgsConstructor
-public class DevAccountController implements DepositAccountInputPort {
+public class DevAccountController {
 
-    private final DepositAccountUseCase depositAccountUseCase;
+    private final DepositAccountInputPort depositAccountUseCase;
 
     @PostMapping("/{id}/deposit")
     public ResponseEntity<DepositAccountResponse> depositEndpoint(
             @PathVariable("id") Long accountId,
             @Valid @RequestBody DepositAccountRequest request) {
-        DepositAccountOutputResponse output = deposit(
+        DepositAccountOutputResponse output = depositAccountUseCase.deposit(
                 new DepositAccountInputRequest(accountId, request.amount())
         );
         return ResponseEntity.ok(new DepositAccountResponse(
                 output.accountId(),
                 output.balance()
         ));
-    }
-
-    @Override
-    public DepositAccountOutputResponse deposit(DepositAccountInputRequest request) {
-        return depositAccountUseCase.deposit(request);
     }
 }

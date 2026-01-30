@@ -4,13 +4,14 @@ import com.homebanking.application.dto.transfer.response.TransferOutputResponse;
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.transfer.TransferNotFoundException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import com.homebanking.port.in.transfer.GetTransferInputPort;
 import com.homebanking.port.out.TransferRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.format.DateTimeFormatter;
 
 @RequiredArgsConstructor
-public class GetTransferUseCaseImpl implements GetTransferUseCase {
+public class GetTransferUseCaseImpl implements GetTransferInputPort {
 
     private final TransferRepository transferRepository;
 

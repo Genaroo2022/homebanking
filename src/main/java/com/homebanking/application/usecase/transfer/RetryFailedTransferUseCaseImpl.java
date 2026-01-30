@@ -5,15 +5,17 @@ import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.exception.transfer.TransferNotFoundException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import com.homebanking.port.in.transfer.ProcessTransferInputPort;
+import com.homebanking.port.in.transfer.RetryTransferInputPort;
 import com.homebanking.port.out.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-public class RetryFailedTransferUseCaseImpl implements RetryFailedTransferUseCase {
+public class RetryFailedTransferUseCaseImpl implements RetryTransferInputPort {
 
     private final TransferRepository transferRepository;
-    private final ProcessTransferUseCase processTransferUseCase;
+    private final ProcessTransferInputPort processTransferUseCase;
 
     @Override
     @Transactional

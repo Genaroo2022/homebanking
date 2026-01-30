@@ -6,7 +6,7 @@ import com.homebanking.application.dto.profile.response.UserProfileOutputRespons
 import com.homebanking.domain.entity.User;
 import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.domain.util.DomainErrorMessages;
-import com.homebanking.port.in.authentication.GetUserProfileInputPort;
+import com.homebanking.port.in.profile.GetUserProfileInputPort;
 import com.homebanking.port.out.AccountRepository;
 import com.homebanking.port.out.UserRepository;
 import lombok.RequiredArgsConstructor;

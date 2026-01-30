@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Adapter in: Scheduler for transfer processing.
- *
+
  * Mantiene el scheduling fuera de la capa de aplicacion.
  */
 @Component

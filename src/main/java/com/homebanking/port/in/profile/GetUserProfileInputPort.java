@@ -1,4 +1,4 @@
-package com.homebanking.port.in.authentication;
+package com.homebanking.port.in.profile;
 
 import com.homebanking.application.dto.profile.request.GetUserProfileInputRequest;
 import com.homebanking.application.dto.profile.response.UserProfileOutputResponse;

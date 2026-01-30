@@ -5,12 +5,13 @@ import com.homebanking.application.dto.account.response.DepositAccountOutputResp
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
 import com.homebanking.domain.util.DomainErrorMessages;
+import com.homebanking.port.in.account.DepositAccountInputPort;
 import com.homebanking.port.out.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-public class DepositAccountUseCaseImpl implements DepositAccountUseCase {
+public class DepositAccountUseCaseImpl implements DepositAccountInputPort {
 
     private final AccountRepository accountRepository;
 

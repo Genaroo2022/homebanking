@@ -6,7 +6,7 @@ import com.homebanking.adapter.in.web.response.TokenResponse;
 import com.homebanking.application.dto.authentication.request.LoginInputRequest;
 import com.homebanking.application.dto.profile.request.GetUserProfileInputRequest;
 import com.homebanking.port.in.authentication.LoginUserInputPort;
-import com.homebanking.port.in.authentication.GetUserProfileInputPort;
+import com.homebanking.port.in.profile.GetUserProfileInputPort;
 import com.homebanking.adapter.in.web.response.MeResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

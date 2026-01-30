@@ -4,7 +4,7 @@ import com.homebanking.application.usecase.auth.LoginUserUseCaseImpl;
 import com.homebanking.application.usecase.user.GetUserProfileUseCaseImpl;
 import com.homebanking.application.usecase.auth.RegisterUserUseCaseImpl;
 import com.homebanking.port.in.authentication.LoginUserInputPort;
-import com.homebanking.port.in.authentication.GetUserProfileInputPort;
+import com.homebanking.port.in.profile.GetUserProfileInputPort;
 import com.homebanking.port.in.registration.RegisterUserInputPort;
 import com.homebanking.port.out.AccountRepository;
 import com.homebanking.port.out.PasswordHasher;
