@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,6 +34,8 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 class RegisterUserUseCaseImplTest {
+
+    private static final UUID USER_ID = UUID.randomUUID();
 
     @Mock
     private UserRepository userRepository;
@@ -71,7 +74,7 @@ class RegisterUserUseCaseImplTest {
         );
 
         User savedUser = User.withId(
-                1L,
+                USER_ID,
                 request.email(),
                 "hashed_password",
                 request.name(),
@@ -97,7 +100,7 @@ class RegisterUserUseCaseImplTest {
         // Assert
         assertThat(result)
                 .isNotNull()
-                .satisfies(response -> assertThat(response.userId()).isEqualTo(1L));
+                .satisfies(response -> assertThat(response.userId()).isEqualTo(USER_ID));
 
         // Verify: Usuario guardado con contraseña encriptada
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -127,7 +130,7 @@ class RegisterUserUseCaseImplTest {
         );
 
         User existingUser = User.withId(
-                1L,
+                USER_ID,
                 "john@example.com",
                 "hashed123",
                 "Jane",

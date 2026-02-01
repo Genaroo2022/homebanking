@@ -1,7 +1,8 @@
-
 package com.homebanking.config;
 
-import com.homebanking.application.service.transfer.ProcessTransferApplicationService;
+import com.homebanking.application.mapper.TransferMapper;
+import com.homebanking.application.service.transfer.TransferBatchProcessingService;
+import com.homebanking.application.service.transfer.TransferStateTransitionService;
 import com.homebanking.application.usecase.transfer.CreateTransferUseCaseImpl;
 import com.homebanking.application.usecase.transfer.GetTransferUseCaseImpl;
 import com.homebanking.application.usecase.transfer.ProcessTransferUseCaseImpl;
@@ -12,7 +13,6 @@ import com.homebanking.port.in.transfer.ProcessTransferInputPort;
 import com.homebanking.port.in.transfer.RetryTransferInputPort;
 import com.homebanking.port.out.AccountRepository;
 import com.homebanking.port.out.EventPublisher;
-import com.homebanking.port.out.NotificationOutputPort;
 import com.homebanking.port.out.TransferProcessorOutputPort;
 import com.homebanking.port.out.TransferRepository;
 import org.springframework.context.annotation.Bean;
@@ -21,18 +21,18 @@ import org.springframework.context.annotation.Configuration;
 /*
  * Config: TransferConfig
 
- * Configuración de inyección de dependencias para transferencias.
+ * Configuracion de inyeccion de dependencias para transferencias.
 
  * Responsabilidades:
- * ✓ "@Instanciar" "use cases"
- * ✓ Inyectar dependencias (repositories, ports)
- * ✓ Mantener árbol de dependencias limpio
+ * ? "@Instanciar" "use cases"
+ * ? Inyectar dependencias (repositories, ports)
+ * ? Mantener arbol de dependencias limpio
 
  * Beneficios:
- * • Centraliza configuración
- * • Facilita testing ("@mockear" dependencias)
- * • Documenta la estructura de dependencias
- * • Permite múltiples implementaciones del mismo puerto
+ * - Centraliza configuracion
+ * - Facilita testing ("@mockear" dependencias)
+ * - Documenta la estructura de dependencias
+ * - Permite multiples implementaciones del mismo puerto
  */
 @Configuration
 public class TransferConfig {
@@ -63,23 +63,21 @@ public class TransferConfig {
     /**
      * Bean: TransferProcessorService
 
-     * Servicio que procesa transferencias de forma asincrónica.
+     * Servicio que procesa transferencias de forma asincronica.
      * Inyecta:
-     * • Repositories (para leer/escribir estado)
-     * • TransferProcessorOutputPort (para llamar sistema externo)
-     * • NotificationOutputPort (para notificar usuarios)
+     * - Repositories (para leer/escribir estado)
+     * - TransferProcessorOutputPort (para llamar sistema externo)
+     * - NotificationOutputPort (para notificar usuarios)
      */
     @Bean
     public ProcessTransferInputPort processTransferUseCase(
-            TransferRepository transferRepository,
-            AccountRepository accountRepository,
             TransferProcessorOutputPort transferProcessor,
-            NotificationOutputPort notificationPort) {
+            TransferMapper transferMapper,
+            TransferStateTransitionService stateService) {
         return new ProcessTransferUseCaseImpl(
-                transferRepository,
-                accountRepository,
                 transferProcessor,
-                notificationPort
+                transferMapper,
+                stateService
         );
     }
 
@@ -94,14 +92,16 @@ public class TransferConfig {
     }
 
     @Bean
-    public ProcessTransferApplicationService transferProcessorService(
+    public TransferBatchProcessingService transferBatchProcessingService(
             TransferRepository transferRepository,
             ProcessTransferInputPort processTransferUseCase,
             RetryTransferInputPort retryFailedTransferUseCase) {
-        return new ProcessTransferApplicationService(
+        return new TransferBatchProcessingService(
                 transferRepository,
                 processTransferUseCase,
                 retryFailedTransferUseCase
         );
     }
 }
+
+

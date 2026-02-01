@@ -8,6 +8,7 @@ import com.homebanking.application.dto.profile.request.GetUserProfileInputReques
 import com.homebanking.port.in.authentication.LoginUserInputPort;
 import com.homebanking.port.in.profile.GetUserProfileInputPort;
 import com.homebanking.adapter.in.web.response.MeResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +31,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
-            @RequestBody @Valid LoginRequest request) {
+            @RequestBody @Valid LoginRequest request, HttpServletRequest httpServletRequest) {
 
-        LoginInputRequest inputRequest = authWebMapper.toInputRequest(request);
+        LoginInputRequest inputRequest = authWebMapper.toInputRequest(request, httpServletRequest.getRemoteAddr());
 
         var outputResponse = loginUserUseCase.login(inputRequest);
 

@@ -1,5 +1,5 @@
 
-package com.homebanking.adapter.out.external.notification;
+package com.homebanking.adapter.out.external.notification.client;
 
 import com.homebanking.domain.event.TransferCompletedEvent;
 import com.homebanking.domain.event.TransferFailedEvent;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
  * Cuando TransferCompletedEvent es publicado:
  * 1. Spring publica el evento
- * 2. Listeners son ejecutados ASINCRONAMENTE
+ * 2. Listeners son ejecutados ASINCRÓNICAMENTE
  * 3. Notificaciones enviadas sin bloquear transaction
 
  * Beneficios:

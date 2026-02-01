@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.homebanking.domain.enums.TransferStatus;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Spring Data Repository: SpringDataTransferRepository
@@ -14,7 +15,7 @@ import java.util.Optional;
  * Queries optimizadas con índices para consultas frecuentes.
  */
 @Repository
-interface SpringDataTransferRepository extends JpaRepository<TransferJpaEntity, Long> {
+interface SpringDataTransferRepository extends JpaRepository<TransferJpaEntity, UUID> {
 
     /**
      * Busca transferencia por idempotency key (CRÍTICO para idempotencia).
@@ -24,7 +25,7 @@ interface SpringDataTransferRepository extends JpaRepository<TransferJpaEntity, 
     /**
      * Lista transferencias de una cuenta origen.
      */
-    List<TransferJpaEntity> findByOriginAccountId(Long originAccountId);
+    List<TransferJpaEntity> findByOriginAccountId(UUID originAccountId);
 
     /**
      * Obtiene transferencias pendientes para procesamiento asincrónico.

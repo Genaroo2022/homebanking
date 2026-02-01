@@ -1,4 +1,6 @@
 package com.homebanking.domain.event;
 
-public record TransferCreatedEvent(Long transferId) {
+import java.util.UUID;
+
+public record TransferCreatedEvent(UUID transferId) {
 }

@@ -1,5 +1,6 @@
 package com.homebanking.config;
 
+import com.homebanking.application.service.auth.LoginAttemptService;
 import com.homebanking.application.usecase.auth.LoginUserUseCaseImpl;
 import com.homebanking.application.usecase.user.GetUserProfileUseCaseImpl;
 import com.homebanking.application.usecase.auth.RegisterUserUseCaseImpl;
@@ -20,8 +21,18 @@ public class UseCaseConfig {
     public LoginUserInputPort loginUserUseCase(
             UserRepository userRepository,
             PasswordHasher passwordHasher,
-            TokenGenerator tokenGenerator) {
-        return new LoginUserUseCaseImpl(userRepository, passwordHasher, tokenGenerator);
+            TokenGenerator tokenGenerator,
+            LoginAttemptService loginAttemptService,
+            com.homebanking.port.out.LoginRateLimiter loginRateLimiter,
+            com.homebanking.port.out.EventPublisher eventPublisher) {
+        return new LoginUserUseCaseImpl(
+                userRepository,
+                passwordHasher,
+                tokenGenerator,
+                loginAttemptService,
+                loginRateLimiter,
+                eventPublisher
+        );
     }
 
     @Bean

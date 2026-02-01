@@ -1,8 +1,11 @@
-package com.homebanking.domain.exception.transfer;
+package com.homebanking.domain.exception.account;
 
 
 
 import com.homebanking.domain.exception.common.DomainException;
+
+import java.util.UUID;
+
 /**
  * Excepción: InsufficientFundsException
 
@@ -11,13 +14,13 @@ import com.homebanking.domain.exception.common.DomainException;
  */
 public class InsufficientFundsException extends DomainException {
 
-    private final Long accountId;
+    private final UUID accountId;
     private final java.math.BigDecimal requestedAmount;
     private final java.math.BigDecimal availableBalance;
 
     public InsufficientFundsException(
             String message,
-            Long accountId,
+            UUID accountId,
             java.math.BigDecimal requestedAmount,
             java.math.BigDecimal availableBalance) {
         super(message);
@@ -26,7 +29,7 @@ public class InsufficientFundsException extends DomainException {
         this.availableBalance = availableBalance;
     }
 
-    public Long getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
@@ -38,5 +41,3 @@ public class InsufficientFundsException extends DomainException {
         return availableBalance;
     }
 }
-
-

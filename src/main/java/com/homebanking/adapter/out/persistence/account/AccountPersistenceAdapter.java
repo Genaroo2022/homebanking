@@ -1,12 +1,14 @@
 package com.homebanking.adapter.out.persistence.account;
 
 import com.homebanking.domain.entity.Account;
+import com.homebanking.domain.valueobject.common.Cbu;
 import com.homebanking.port.out.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
@@ -34,13 +36,13 @@ class AccountPersistenceAdapter implements AccountRepository {
     }
 
     @Override
-    public Optional<Account> findById(Long id) {
+    public Optional<Account> findById(UUID id) {
         return springDataAccountRepository.findById(id)
                 .map(accountMapper::toDomain);
     }
 
     @Override
-    public List<Account> findByUserId(Long userId) {
+    public List<Account> findByUserId(UUID userId) {
         return springDataAccountRepository.findByUserId(userId)
                 .stream()
                 .map(accountMapper::toDomain)
@@ -48,12 +50,12 @@ class AccountPersistenceAdapter implements AccountRepository {
     }
 
     @Override
-    public Optional<Account> findByCbu(String cbu) {
-        return springDataAccountRepository.findByCbu(cbu).map(accountMapper::toDomain);
+    public Optional<Account> findByCbu(Cbu cbu) {
+        return springDataAccountRepository.findByCbu(cbu.value()).map(accountMapper::toDomain);
     }
 
     @Override
-    public Optional<Account> findByAlias(String alias) {
-        return springDataAccountRepository.findByAlias(alias).map(accountMapper::toDomain);
+    public boolean existsByCbu(Cbu cbu) {
+        return springDataAccountRepository.existsByCbu(cbu.value());
     }
 }

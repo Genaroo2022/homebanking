@@ -5,9 +5,8 @@ import com.homebanking.application.dto.transfer.response.TransferOutputResponse;
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
+import com.homebanking.domain.exception.account.InvalidAccountDataException;
 import com.homebanking.domain.exception.transfer.DestinationAccountNotFoundException;
-import com.homebanking.domain.exception.transfer.InsufficientFundsException;
-import com.homebanking.domain.exception.transfer.SameAccountTransferException;
 import com.homebanking.domain.event.TransferCreatedEvent;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.domain.valueobject.common.Cbu;
@@ -24,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -36,26 +36,51 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
     @Override
     @Transactional
     public TransferOutputResponse createTransfer(CreateTransferInputRequest request) {
+        // 1. Idempotencia
         Optional<Transfer> existing = transferRepository.findByIdempotencyKey(request.idempotencyKey());
         if (existing.isPresent()) {
             return toOutputResponse(existing.get());
         }
 
+        // 2. Conversión de Value Objects (Fail-Fast)
+        Cbu targetCbu = Cbu.of(request.targetCbu());
+        TransferAmount amount = TransferAmount.of(request.amount());
+        TransferDescription description = TransferDescription.of(request.description());
+        IdempotencyKey key = IdempotencyKey.of(request.idempotencyKey());
+
+        // 3. Validar existencia del destino (Opcional pero recomendado)
+        // NOTA: No cargamos la entidad, solo verificamos si es viable transferirle.
+        // Si el destino es otro banco, esta validación podría no aplicar o ser diferente.
+        validateDestinationExists(targetCbu);
+
+        // 4. Cargar Agregado Origen
         Account originAccount = loadOriginAccount(request.originAccountId());
 
-        validateDestinationAccountExists(request.targetCbu());
-        validateNotSameAccount(originAccount, request.targetCbu());
-        validateSufficientFunds(originAccount, request.amount());
+        // 5. Lógica de Negocio (Dominio Puro)
+        // Aquí ocurre la magia: Pasamos solo el CBU destino.
+        Transfer transfer = originAccount.initiateTransferTo(
+                targetCbu,
+                amount,
+                description,
+                key
+        );
 
-        Transfer transfer = buildTransfer(request);
-        originAccount.debit(request.amount());
+        // 6. Persistencia (Transaccionalidad atómica del agregado origen y la transferencia)
+        persistTransferAndAccount(transfer, originAccount);
 
-        Transfer savedTransfer = persistTransferAndAccount(transfer, originAccount);
-        logTransferCreated(savedTransfer);
+        // 7. Efectos secundarios (Logs y Eventos)
+        logTransferCreated(transfer);
+        eventPublisher.publish(new TransferCreatedEvent(transfer.getId()));
 
-        eventPublisher.publish(new TransferCreatedEvent(savedTransfer.getId()));
+        return toOutputResponse(transfer);
+    }
 
-        return toOutputResponse(savedTransfer);
+    private void validateDestinationExists(Cbu targetCbu) {
+        // Esto es mucho más ligero que un findById().
+        // Solo verifica "SELECT 1 FROM accounts WHERE cbu = ?"
+        if (!accountRepository.existsByCbu(targetCbu)) {
+            throw new InvalidAccountDataException(DomainErrorMessages.ACCOUNT_NOT_FOUND);
+        }
     }
 
     private TransferOutputResponse toOutputResponse(Transfer transfer) {
@@ -71,7 +96,7 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
         );
     }
 
-    private Account loadOriginAccount(Long originAccountId) {
+    private Account loadOriginAccount(UUID originAccountId) {
         return accountRepository.findById(originAccountId)
                 .orElseThrow(() -> new AccountNotFoundException(
                         DomainErrorMessages.ACCOUNT_NOT_FOUND,
@@ -79,46 +104,9 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
                 ));
     }
 
-    private void validateDestinationAccountExists(String targetCbu) {
-        if (accountRepository.findByCbu(targetCbu).isEmpty()) {
-            throw new DestinationAccountNotFoundException(
-                    DomainErrorMessages.ACCOUNT_NOT_FOUND,
-                    targetCbu
-            );
-        }
-    }
-
-    private void validateNotSameAccount(Account originAccount, String targetCbu) {
-        if (originAccount.getCbu().value().equals(targetCbu)) {
-            throw new SameAccountTransferException(DomainErrorMessages.TRANSFER_SAME_ACCOUNT);
-        }
-    }
-
-    private void validateSufficientFunds(Account originAccount, java.math.BigDecimal amount) {
-        if (originAccount.getBalance().value().compareTo(amount) < 0) {
-            throw new InsufficientFundsException(
-                    DomainErrorMessages.INSUFFICIENT_FUNDS,
-                    originAccount.getId(),
-                    amount,
-                    originAccount.getBalance().value()
-            );
-        }
-    }
-
-    private Transfer buildTransfer(CreateTransferInputRequest request) {
-        return Transfer.create(
-                request.originAccountId(),
-                Cbu.of(request.targetCbu()),
-                TransferAmount.of(request.amount()),
-                TransferDescription.of(request.description()),
-                IdempotencyKey.of(request.idempotencyKey())
-        );
-    }
-
-    private Transfer persistTransferAndAccount(Transfer transfer, Account originAccount) {
-        Transfer savedTransfer = transferRepository.save(transfer);
+    private void persistTransferAndAccount(Transfer transfer, Account originAccount) {
+        transferRepository.save(transfer);
         accountRepository.save(originAccount);
-        return savedTransfer;
     }
 
     private void logTransferCreated(Transfer transfer) {

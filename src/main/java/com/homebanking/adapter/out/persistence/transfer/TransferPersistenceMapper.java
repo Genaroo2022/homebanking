@@ -8,7 +8,7 @@ import com.homebanking.domain.valueobject.transfer.TransferDescription;
 import org.springframework.stereotype.Component;
 
 /**
- * Mapper: TransferMapper
+ * Mapper: TransferPersistenceMapper
  *
  * Convierte entre entidad de dominio (Transfer) y JPA entity (TransferJpaEntity).
  * Responsable de la traducción bidireccional.
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  * ✓ Únicamente mapeo de datos
  */
 @Component
-public class TransferMapper {
+public class TransferPersistenceMapper {
 
     /**
      * Convierte Transfer (domain) → TransferJpaEntity (persistence)

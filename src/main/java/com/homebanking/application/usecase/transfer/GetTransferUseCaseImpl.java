@@ -9,6 +9,7 @@ import com.homebanking.port.out.TransferRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public class GetTransferUseCaseImpl implements GetTransferInputPort {
@@ -16,7 +17,7 @@ public class GetTransferUseCaseImpl implements GetTransferInputPort {
     private final TransferRepository transferRepository;
 
     @Override
-    public TransferOutputResponse getTransfer(Long transferId) {
+    public TransferOutputResponse getTransfer(UUID transferId) {
         Transfer transfer = transferRepository.findById(transferId)
                 .orElseThrow(() -> new TransferNotFoundException(
                         DomainErrorMessages.TRANSFER_NOT_FOUND,

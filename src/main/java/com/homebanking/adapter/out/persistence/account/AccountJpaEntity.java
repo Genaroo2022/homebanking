@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "accounts")
@@ -15,11 +16,11 @@ class AccountJpaEntity {
 
     @Setter(AccessLevel.PACKAGE)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(unique = true, nullable = false, length = CBU_LENGTH)
     private String cbu;
@@ -38,7 +39,7 @@ class AccountJpaEntity {
     @Version
     private Long version;
 
-    public AccountJpaEntity(Long userId, String cbu, String alias,
+    public AccountJpaEntity(UUID userId, String cbu, String alias,
                             BigDecimal balance, LocalDateTime createdAt) {
         this.userId = userId;
         this.cbu = cbu;

@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * AGGREGATE ROOT: Transfer
@@ -45,11 +46,11 @@ import java.util.List;
 public class Transfer {
 
     // ==================== IDENTIDAD ====================
-    private Long id;
+    private UUID id;
     private IdempotencyKey idempotencyKey;
 
     // ==================== DATOS TRANSACCIONALES ====================
-    private Long originAccountId;
+    private UUID originAccountId;
     private Cbu targetCbu;
     private TransferAmount amount;
     private TransferDescription description;
@@ -83,14 +84,13 @@ public class Transfer {
      * @throws InvalidTransferDataException si datos son inválidos
      */
     public static Transfer create(
-            Long originAccountId,
+            UUID originAccountId,
             Cbu targetCbu,
             TransferAmount amount,
             TransferDescription description,
             IdempotencyKey idempotencyKey) {
 
         Transfer transfer = new Transfer();
-        transfer.id = null;                                    // ← Sin ID aún (lo asigna BD)
         transfer.originAccountId = originAccountId;
         transfer.targetCbu = targetCbu;
         transfer.amount = amount;
@@ -126,9 +126,9 @@ public class Transfer {
      * @return Transfer con estado reconstituyido
      */
     public static Transfer reconstruct(
-            Long id,
+            UUID id,
             IdempotencyKey idempotencyKey,
-            Long originAccountId,
+            UUID originAccountId,
             Cbu targetCbu,
             TransferAmount amount,
             TransferDescription description,

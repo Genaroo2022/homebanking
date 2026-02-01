@@ -11,6 +11,8 @@ import com.homebanking.port.out.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @RequiredArgsConstructor
 public class RetryFailedTransferUseCaseImpl implements RetryTransferInputPort {
 
@@ -19,7 +21,7 @@ public class RetryFailedTransferUseCaseImpl implements RetryTransferInputPort {
 
     @Override
     @Transactional
-    public TransferOutputResponse retryFailedTransfer(Long transferId) {
+    public TransferOutputResponse retryFailedTransfer(UUID transferId) {
         Transfer transfer = transferRepository.findById(transferId)
                 .orElseThrow(() -> new TransferNotFoundException(
                         DomainErrorMessages.TRANSFER_NOT_FOUND,

@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * DTO: CreateTransferInputRequest
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
  */
 public record CreateTransferInputRequest(
         @NotNull(message = "El ID de la cuenta origen es obligatorio")
-        Long originAccountId,
+        UUID originAccountId,
 
         @NotBlank(message = "El CBU de destino es obligatorio")
         String targetCbu,

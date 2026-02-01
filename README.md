@@ -1,4 +1,4 @@
-﻿# 🏦 Digital Home Banking - Hexagonal Architecture
+# ?? Digital Home Banking - Hexagonal Architecture
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
 ![Spring Boot 4.0.1](https://img.shields.io/badge/Spring_Boot-4.0.1-brightgreen?style=flat-square&logo=springboot)![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-blueviolet?style=flat-square)
@@ -6,98 +6,98 @@
 
 Plataforma de banca digital moderna, escalable y segura desarrollada con Arquitectura Hexagonal pura, Clean Architecture y principios SOLID 100%.
 
-El diseño invierte todas las dependencias hacia el dominio, garantizando que la lógica de negocio permanezca completamente agnóstica a frameworks externos. Cada cambio en infraestructura ocurre sin tocar el núcleo del sistema.
+El dise�o invierte todas las dependencias hacia el dominio, garantizando que la l�gica de negocio permanezca completamente agn�stica a frameworks externos. Cada cambio en infraestructura ocurre sin tocar el n�cleo del sistema.
 
-## 🏗️ Arquitectura y Diseño
+## ??? Arquitectura y Dise�o
 
-El núcleo del sistema (`Domain`) está completamente aislado de frameworks externos. La comunicación se realiza estrictamente a través de Interfaces (`Ports`) e Implementaciones (`Adapters`).
+El n�cleo del sistema (`Domain`) est� completamente aislado de frameworks externos. La comunicaci�n se realiza estrictamente a trav�s de Interfaces (`Ports`) e Implementaciones (`Adapters`).
 
 ### Estructura del Proyecto
-El código sigue una organización semántica clara:
+El c�digo sigue una organizaci�n sem�ntica clara:
 
 ```text
 src/
-└── main/
-    ├── java/com/homebanking/
-    │   ├── adapter
-    │   │   ├── in
-    │   │   │   ├── event/         # Listeners de Eventos (ej. TransferEventListener)
-    │   │   │   ├── scheduler/     # Tareas Programadas (ej. TransferProcessingScheduler)
-    │   │   │   └── web/           # Controladores REST, Handlers de Excepciones, Mappers, etc.
-    │   │   └── out
-    │   │       ├── event/         # Implementaciones de Publicadores de Eventos
-    │   │       ├── external/      # Adaptadores para servicios externos (pagos, notificaciones)
-    │   │       ├── persistence/   # Implementaciones JPA de repositorios
-    │   │       └── security/      # Implementación de PasswordHasher
-    │   ├── application
-    │   │   ├── dto/             # DTOs para casos de uso
-    │   │   ├── service/         # Servicios de aplicación que orquestan casos de uso
-    │   │   └── usecase/         # Implementaciones de casos de uso
-    │   ├── config/              # Beans de configuración de Spring
-    │   ├── domain
-    │   │   ├── entity/          # Entidades de dominio (ej. Account, Transfer)
-    │   │   ├── enums/           # Enumeraciones específicas del dominio
-    │   │   ├── event/           # Definiciones de eventos de dominio
-    │   │   ├── exception/       # Excepciones de dominio personalizadas
-    │   │   ├── policy/          # Políticas de dominio (ej. transiciones de estado)
-    │   │   ├── service/         # Servicios de dominio
-    │   │   └── valueobject/     # Value Objects de dominio
-    │   ├── port
-    │   │   ├── in/              # Puertos de entrada (interfaces de casos de uso)
-    │   │   └── out/             # Puertos de salida (interfaces de repositorios, servicios)
-    │   └── HomebankingApplication.java
-    └── resources/
-        ├── db/migration/      # Migraciones de base de datos (Flyway/Liquibase)
-        ├── static/
-        ├── templates/
-        └── application.properties
++-- main/
+    +-- java/com/homebanking/
+    �   +-- adapter
+    �   �   +-- in
+    �   �   �   +-- event/         # Listeners de Eventos (ej. TransferEventListener)
+    �   �   �   +-- scheduler/     # Tareas Programadas (ej. TransferProcessingScheduler)
+    �   �   �   +-- web/           # Controladores REST, Handlers de Excepciones, Mappers, etc.
+    �   �   +-- out
+    �   �       +-- event/         # Implementaciones de Publicadores de Eventos
+    �   �       +-- external/      # Adaptadores para servicios externos (pagos, notificaciones)
+    �   �       +-- persistence/   # Implementaciones JPA de repositorios
+    �   �       +-- security/      # PasswordHasher y rate limiting
+    �   +-- application
+    �   �   +-- dto/             # DTOs para casos de uso
+    �   �   +-- service/         # Servicios de aplicaci�n que orquestan casos de uso
+    �   �   +-- usecase/         # Implementaciones de casos de uso
+    �   +-- config/              # Beans de configuraci�n de Spring
+    �   +-- domain
+    �   �   +-- entity/          # Entidades de dominio (ej. Account, Transfer)
+    �   �   +-- enums/           # Enumeraciones espec�ficas del dominio
+    �   �   +-- event/           # Definiciones de eventos de dominio
+    �   �   +-- exception/       # Excepciones de dominio personalizadas
+    �   �   +-- policy/          # Pol�ticas de dominio (ej. transiciones de estado)
+    �   �   +-- service/         # Servicios de dominio
+    �   �   +-- valueobject/     # Value Objects de dominio
+    �   +-- port
+    �   �   +-- in/              # Puertos de entrada (interfaces de casos de uso)
+    �   �   +-- out/             # Puertos de salida (interfaces de repositorios, servicios)
+    �   +-- HomebankingApplication.java
+    +-- resources/
+        +-- db/migration/      # Migraciones de base de datos (Flyway/Liquibase)
+        +-- static/
+        +-- templates/
+        +-- application.properties
 ```
 
 ### Notas de implementacion actuales
 - Scheduling de transferencias aislado en `adapter/in/scheduler`.
-- Generacion de tokens y hashing de contrasenas desacoplados via puertos `TokenGenerator` y `PasswordHasher`.
+- Generacion de tokens y hashing de contrasenas desacoplados via puertos `TokenGenerator` y `PasswordHasher`.\r\n- Rate limiting por IP en `/auth/login` + backoff exponencial por usuario; se publica `LoginAttemptedEvent` con TODO para integracion Kafka.
 - Respuestas de error unificadas con `ErrorResponse` (incluye validaciones).
 - Transferencias se rechazan si la cuenta destino no existe.
 - Concurrencia de saldo protegida con `@Version` en Account JPA.
 - Endpoint interno de deposito (solo `dev`): `POST /accounts/{id}/deposit`.
-- El procesamiento de transferencias es asíncrono. Al crear una transferencia, su estado inicial es `PENDING` y se procesa automáticamente en segundo plano.
+- El procesamiento de transferencias es as�ncrono. Al crear una transferencia, su estado inicial es `PENDING` y se procesa autom�ticamente en segundo plano.
 - Reintentos manuales disponibles en `POST /api/transfers/{id}/retry`.
 
 
-## 🛠️ Stack Tecnológico
+## ??? Stack Tecnol�gico
 
-Utilizo las últimas versiones estables para garantizar un desarrollo empresarial robusto:
+Utilizo las �ltimas versiones estables para garantizar un desarrollo empresarial robusto:
 
-| Categoría | Tecnologías |
+| Categor�a | Tecnolog�as |
 | :--- | :--- |
 | **Core** | ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.1-6DB33F?style=for-the-badge&logo=spring&logoColor=white) |
-| **Persistencia** | ![H2](https://img.shields.io/badge/H2-Dev_Mode-blue?style=for-the-badge) ➡️ ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prod_Goal-316192?style=for-the-badge&logo=postgresql&logoColor=white) |
+| **Persistencia** | ![H2](https://img.shields.io/badge/H2-Dev_Mode-blue?style=for-the-badge) ?? ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prod_Goal-316192?style=for-the-badge&logo=postgresql&logoColor=white) |
 | **Infraestructura** | ![Docker](https://img.shields.io/badge/Docker-Containerization_Planned-2496ED?style=for-the-badge&logo=docker&logoColor=white) |
 | **Seguridad** | ![Spring Security](https://img.shields.io/badge/Spring_Security-JWT-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white) |
 | **Herramientas** | ![MapStruct](https://img.shields.io/badge/MapStruct-Mapping-transparent?style=for-the-badge) ![Lombok](https://img.shields.io/badge/Lombok-Boilerplate-bc0230?style=for-the-badge&logo=lombok&logoColor=white) |
 | **Docs & Test** | ![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black) ![JUnit5](https://img.shields.io/badge/JUnit-5-25A162?style=for-the-badge&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-Testing-yellow?style=for-the-badge) |
 ---
 
-## 🚀 Funcionalidades (Roadmap)
+## ?? Funcionalidades (Roadmap)
 
-El diseño actual contempla la implementación modular de las siguientes características:
+El dise�o actual contempla la implementaci�n modular de las siguientes caracter�sticas:
 
-- [x] 🔐 **Auth & Seguridad:** Login, implementación de JWT, Filtros de seguridad y Auditoría.
-- [x] 💰 **Gestión de Cuentas:** Consulta de saldos en tiempo real y generación de CBU.
-- [x] 💸 **Transacciones:** Transferencias entre terceros con validaciones ACID (atómicas).
-- [ ] 🧾 **Pagos:** Módulo de pago de servicios (`BillUseCase`).
-- [ ] 🔔 **Notificaciones:** Integración con adaptadores de Email, SMS y Push.
-- [ ] 💳 **Tarjetas:** Gestión completa de tarjetas de débito/crédito.
+- [x] ?? **Auth & Seguridad:** Login, implementaci�n de JWT, Filtros de seguridad y Auditor�a.
+- [x] ?? **Gesti�n de Cuentas:** Consulta de saldos en tiempo real y generaci�n de CBU.
+- [x] ?? **Transacciones:** Transferencias entre terceros con validaciones ACID (at�micas).
+- [ ] ?? **Pagos:** M�dulo de pago de servicios (`BillUseCase`).
+- [ ] ?? **Notificaciones:** Integraci�n con adaptadores de Email, SMS y Push.
+- [ ] ?? **Tarjetas:** Gesti�n completa de tarjetas de d�bito/cr�dito.
 
 ---
 
-## ⚙️ Configuración Local
+## ?? Configuraci�n Local
 
 Sigue estos pasos para levantar el entorno de desarrollo:
 
-## 📋 Prerrequisitos
+## ?? Prerrequisitos
 
-Antes de ejecutar el proyecto, asegúrate de tener instalado:
+Antes de ejecutar el proyecto, aseg�rate de tener instalado:
 
 - **Java JDK 21 o superior**
 - **Java correctamente configurado en el PATH**
@@ -110,7 +110,7 @@ Puedes verificarlo ejecutando:
 java -version
 mvn -version
 ```
-**-Una vez realizada la verificación, entonces:**
+**-Una vez realizada la verificaci�n, entonces:**
 
 **1. Clonar el repositorio**
 ```bash
@@ -125,47 +125,47 @@ cd homebanking
 ./mvnw clean install
 ```
 
-**3. Ejecutar la aplicación:**
+**3. Ejecutar la aplicaci�n:**
 
 ```bash
 
 ./mvnw spring-boot:run
 ```
-La base de datos H2 se iniciará automáticamente en memoria.
+La base de datos H2 se iniciar� autom�ticamente en memoria.
 
-**4. Documentación API: Una vez iniciado, accede a Swagger UI en: http://localhost:8080/swagger-ui.html**
+**4. Documentaci�n API: Una vez iniciado, accede a Swagger UI en: http://localhost:8080/swagger-ui.html**
 
-## 🌍 Ambientes y Perfiles (Spring Profiles)
+## ?? Ambientes y Perfiles (Spring Profiles)
 
-El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infraestructura según el entorno de ejecución, manteniendo la lógica de negocio inalterada.
+El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infraestructura seg�n el entorno de ejecuci�n, manteniendo la l�gica de negocio inalterada.
 
 | Perfil                         | Base de Datos | Docker | Uso Previsto |
 |:-------------------------------| :--- | :---: | :--- |
-| **`dev`**                      | **H2** (Memoria) | ❌ | Desarrollo local rápido. Habilita endpoints internos de testing. |
-| **`test`** | **H2** (Reset) | ❌ | **Ejecución de Tests Automáticos** (CI/CD). DB limpia por test. |
-| **`prod`**                     | **PostgreSQL** | ✅ | Despliegue en contenedores. Datos persistentes. Seguridad endurecida. |
+| **`dev`**                      | **H2** (Memoria) | ? | Desarrollo local r�pido. Habilita endpoints internos de testing. |
+| **`test`** | **H2** (Reset) | ? | **Ejecuci�n de Tests Autom�ticos** (CI/CD). DB limpia por test. |
+| **`prod`**                     | **PostgreSQL** | ? | Despliegue en contenedores. Datos persistentes. Seguridad endurecida. |
 
-### Cómo ejecutar en diferentes ambientes:
+### C�mo ejecutar en diferentes ambientes:
 
 **Modo Desarrollo (con profile `dev`):**
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
-**Testing (Automático): Ejecuta la batería de pruebas unitarias y de integración.**
+**Testing (Autom�tico): Ejecuta la bater�a de pruebas unitarias y de integraci�n.**
 ```bash
 ./mvnw test
 ```
-**Simulación de Producción (requiere Docker):**
+**Simulaci�n de Producci�n (requiere Docker):**
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
-# 🧪 Guía de Uso de la API
+# ?? Gu�a de Uso de la API
 
 El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 
-### 1️⃣ Registrar un Usuario (Crea Cuenta Automática)
-> **Nota:** Al registrarse, el sistema genera automáticamente una **Caja de Ahorro** con CBU y Alias únicos.
+### 1?? Registrar un Usuario (Crea Cuenta Autom�tica)
+> **Nota:** Al registrarse, el sistema genera autom�ticamente una **Caja de Ahorro** con CBU y Alias �nicos.
 
 * **Endpoint:** `POST` `/users`
 * **Body:**
@@ -181,7 +181,7 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
   "address": "Miami, USA"
 }
 ```
-### 2️⃣ Iniciar Sesión (Obtener Token)
+### 2?? Iniciar Sesi�n (Obtener Token)
 * **Endpoint:** `POST` `/auth/login`
 * **Body:**
 
@@ -192,9 +192,9 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
   "password": "SecurePass123!"
 }
 ```
-**💡 Respuesta: Recibirás un token JWT. Cópialo para usarlo en el siguiente paso.**
+**?? Respuesta: Recibir�s un token JWT. C�pialo para usarlo en el siguiente paso.**
 
-### 3️⃣ Ver Mi Perfil y Cuentas (Endpoint Seguro)
+### 3?? Ver Mi Perfil y Cuentas (Endpoint Seguro)
 * **Endpoint:** `GET` `/auth/me`
 * **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
 
@@ -217,7 +217,7 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 }
 ```
 
-### 4️⃣ Cargar Saldo (Solo DEV)
+### 4?? Cargar Saldo (Solo DEV)
 * **Endpoint:** `POST` `/accounts/{id}/deposit`
 * **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
 * **Body:**
@@ -227,8 +227,8 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 }
 ```
 
-### 5️⃣ Crear Transferencia
-> **Nota:** Al crear la transferencia, su estado inicial será `PENDING`. El procesamiento se realiza automáticamente en segundo plano.
+### 5?? Crear Transferencia
+> **Nota:** Al crear la transferencia, su estado inicial ser� `PENDING`. El procesamiento se realiza autom�ticamente en segundo plano.
 
 * **Endpoint:** `POST` `/api/transfers`
 * **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
@@ -243,28 +243,28 @@ El sistema implementa un flujo seguro completo. Sigue estos pasos para probarlo:
 }
 ```
 
-### 6️⃣ Consultar o Reintentar una Transferencia
-El procesamiento de la transferencia se inicia automáticamente en segundo plano después de la creación. Para conocer su estado final, puedes usar los siguientes endpoints:
+### 6?? Consultar o Reintentar una Transferencia
+El procesamiento de la transferencia se inicia autom�ticamente en segundo plano despu�s de la creaci�n. Para conocer su estado final, puedes usar los siguientes endpoints:
 
 * **Consultar el estado de una transferencia:**
     * `GET /api/transfers/{id}`
 * **Reintentar una transferencia que ha fallado:**
     * `POST /api/transfers/{id}/retry`
-# 🧪 Testing
+# ?? Testing
 * **Ejecutar Tests Unitarios**
 ```bash
 bash./mvnw test
 ```
 
-* **Características:**
+* **Caracter�sticas:**
 
-**✅ Sin Spring context (ultrarrápidos <100ms)**
+**? Sin Spring context (ultrarr�pidos <100ms)**
 
-**✅ Mocks con Mockito**
+**? Mocks con Mockito**
 
-**✅ 100% coverage de casos de uso**
+**? 100% coverage de casos de uso**
 
-**✅ CI/CD ready**
+**? CI/CD ready**
 
 - ## Tests por Capa ##
 ```bash
@@ -285,20 +285,21 @@ bash#
 ./mvnw test -Dtest=*Controller*
 ```
 
-# 🤝 Contribución y Estado del Proyecto #
+# ?? Contribuci�n y Estado del Proyecto #
 
 **El proyecto avanza por "Vertical Slices" funcionales.**
 
-| Módulo | Funcionalidad                        | Estado                                                                    | Endpoint           |
+| M�dulo | Funcionalidad                        | Estado                                                                    | Endpoint           |
 | :--- |:-------------------------------------|:--------------------------------------------------------------------------|:-------------------|
-| **Identity** | Registro de Usuario & Validaciones   | ✅ **Production Ready**                                                    | `POST /users`      |
-| **Security** | Autenticación JWT & Stateless        | ✅ **Production Ready**                                                    | `POST /auth/login` |
-| **Accounts** | Persistencia, Relaciones y Consultas | ✅ **Production Ready**                                                                         | `GET /auth/me`                 |
-| **Payments** | Transferencias Atómicas (ACID)       | ✅ **Core Implemented**                                                   | `POST /api/transfers`  |
-| **Cards** | Emisión y Lógica de Luhn             | 🚧 Core Implemented                                                       | `POST /cards`      |
+| **Identity** | Registro de Usuario & Validaciones   | ? **Production Ready**                                                    | `POST /users`      |
+| **Security** | Autenticaci�n JWT & Stateless        | ? **Production Ready**                                                    | `POST /auth/login` |
+| **Accounts** | Persistencia, Relaciones y Consultas | ? **Production Ready**                                                                         | `GET /auth/me`                 |
+| **Payments** | Transferencias At�micas (ACID)       | ? **Core Implemented**                                                   | `POST /api/transfers`  |
+| **Cards** | Emisi�n y L�gica de Luhn             | ?? Core Implemented                                                       | `POST /cards`      |
 
  **Genaro Rotstein** | **Software Engineer**
 
-📖 Para detalles técnicos profundos, ver [Documentación de Arquitectura](docs/ARCHITECTURE.md)
+?? Para detalles t�cnicos profundos, ver [Documentaci�n de Arquitectura](docs/ARCHITECTURE.md)
+
 
 

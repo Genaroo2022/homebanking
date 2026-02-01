@@ -1,13 +1,16 @@
 package com.homebanking.port.out;
 
 import com.homebanking.domain.entity.Account;
+import com.homebanking.domain.valueobject.common.Cbu;
+
 import java.util.Optional;
 import java.util.List;
+import java.util.UUID;
 
 public interface AccountRepository {
     Account save(Account account);
-    Optional<Account> findById(Long id);
-    List<Account> findByUserId(Long userId);
-    Optional<Account> findByCbu(String cbu);
-    Optional<Account> findByAlias(String alias);
+    Optional<Account> findById(UUID id);
+    List<Account> findByUserId(UUID userId);
+    Optional<Account> findByCbu(Cbu cbu);
+    boolean existsByCbu(Cbu cbu);
 }

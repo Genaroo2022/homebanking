@@ -14,10 +14,11 @@ import java.util.List;
 @Component
 public class AuthWebMapper {
 
-    public LoginInputRequest toInputRequest(LoginRequest request) {
+    public LoginInputRequest toInputRequest(LoginRequest request, String ipAddress) {
         return new LoginInputRequest(
                 request.getEmail(),
-                request.getPassword()
+                request.getPassword(),
+                ipAddress
         );
     }
 

@@ -13,13 +13,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Card {
 
-    private Long id;
-    private Long accountId;
+    private UUID id;
+    private UUID accountId;
     private CardNumber number;
     private CardCvv cvv;
     private CardHolderName cardHolder;
@@ -29,7 +30,7 @@ public class Card {
     private boolean active;
 
     // To create a new card (without ID)
-    public Card(Long accountId, String number, String cvv, String cardHolder,
+    public Card(UUID accountId, String number, String cvv, String cardHolder,
                 LocalDate fromDate, LocalDate thruDate, CardType type, CardColor color) {
 
         validateCardData(accountId, number, cvv, cardHolder, fromDate, thruDate, type, color);
@@ -45,14 +46,14 @@ public class Card {
     }
 
     // Factory Method: Reconstitution from Persistence
-    public static Card withId(Long id, Long accountId, String number, String cvv, String cardHolder,
+    public static Card withId(UUID id, UUID accountId, String number, String cvv, String cardHolder,
                               LocalDate fromDate, LocalDate thruDate, CardType type, CardColor color, boolean active) {
         validateStructuralData(id);
         validateCardData(accountId, number, cvv, cardHolder, fromDate, thruDate, type, color);
         return hydrate(id, accountId, CardNumber.of(number), CardCvv.of(cvv), CardHolderName.of(cardHolder),
                 CardValidity.of(fromDate, thruDate), type, color, active);
     }
-    private static Card hydrate(Long id, Long accountId, CardNumber number, CardCvv cvv, CardHolderName cardHolder,
+    private static Card hydrate(UUID id, UUID accountId, CardNumber number, CardCvv cvv, CardHolderName cardHolder,
                                 CardValidity validity, CardType type, CardColor color, boolean active) {
         Card card = new Card();
         card.id = id;
@@ -92,19 +93,19 @@ public class Card {
 
     // --- VALIDATIONS (Private Static) ---
 
-    private static void validateStructuralData(Long id) {
+    private static void validateStructuralData(UUID id) {
         if (id == null) {
             throw new InvalidCardDataException(DomainErrorMessages.ID_REQUIRED);
         }
     }
 
-    private static void validateCardData(Long accountId, String number, String cvv, String cardHolder,
+    private static void validateCardData(UUID accountId, String number, String cvv, String cardHolder,
                                          LocalDate fromDate, LocalDate thruDate, CardType type, CardColor color) {
         validateAccount(accountId);
     }
 
-    private static void validateAccount(Long accountId) {
-        if (accountId == null || accountId <= 0) {
+    private static void validateAccount(UUID accountId) {
+        if (accountId == null) {
             throw new InvalidCardDataException(DomainErrorMessages.CARD_ACCOUNT_REQUIRED);
         }
     }

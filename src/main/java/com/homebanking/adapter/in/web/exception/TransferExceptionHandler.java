@@ -2,7 +2,7 @@ package com.homebanking.adapter.in.web.exception;
 
 import com.homebanking.adapter.in.web.response.ErrorResponse;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
-import com.homebanking.domain.exception.transfer.InsufficientFundsException;
+import com.homebanking.domain.exception.account.InsufficientFundsException;
 import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.exception.transfer.SameAccountTransferException;
 import com.homebanking.domain.exception.transfer.TransferNotFoundException;

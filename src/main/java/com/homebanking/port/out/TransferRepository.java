@@ -10,6 +10,7 @@ package com.homebanking.port.out;
 import com.homebanking.domain.entity.Transfer;
 import java.util.Optional;
 import java.util.List;
+import java.util.UUID;
 
 public interface TransferRepository {
 
@@ -22,7 +23,7 @@ public interface TransferRepository {
     /**
      * Busca transferencia por ID.
      */
-    Optional<Transfer> findById(Long id);
+    Optional<Transfer> findById(UUID id);
 
     /**
      * Busca transferencia por idempotency key.
@@ -34,7 +35,7 @@ public interface TransferRepository {
      * Obtiene todas las transferencias de una cuenta origen.
      * Útil para historial.
      */
-    List<Transfer> findByOriginAccountId(Long accountId);
+    List<Transfer> findByOriginAccountId(UUID accountId);
 
     /**
      * Obtiene transferencias en estado PENDING.

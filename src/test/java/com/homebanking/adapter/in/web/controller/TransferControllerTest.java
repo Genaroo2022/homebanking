@@ -20,6 +20,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -33,7 +34,7 @@ class TransferControllerTest {
     @Test
     void shouldFailValidation_WhenIdempotencyKeyHeaderIsMissing() {
         CreateTransferRequest request = new CreateTransferRequest(
-                1L,
+                UUID.randomUUID(),
                 "1234567890123456789012",
                 new BigDecimal("100.50"),
                 "Pago de servicios"

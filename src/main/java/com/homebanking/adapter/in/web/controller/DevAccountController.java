@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @Profile("dev")
 @RequestMapping("/accounts")
@@ -25,7 +27,7 @@ public class DevAccountController {
 
     @PostMapping("/{id}/deposit")
     public ResponseEntity<DepositAccountResponse> depositEndpoint(
-            @PathVariable("id") Long accountId,
+            @PathVariable("id") UUID accountId,
             @Valid @RequestBody DepositAccountRequest request) {
         DepositAccountOutputResponse output = depositAccountUseCase.deposit(
                 new DepositAccountInputRequest(accountId, request.amount())

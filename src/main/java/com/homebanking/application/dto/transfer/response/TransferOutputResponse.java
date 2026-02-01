@@ -1,6 +1,7 @@
 package com.homebanking.application.dto.transfer.response;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * DTO: TransferOutputResponse
@@ -9,9 +10,9 @@ import java.math.BigDecimal;
  * Información completa de la transferencia creada.
  */
 public record TransferOutputResponse(
-        Long id,
+        UUID id,
         String idempotencyKey,
-        Long originAccountId,
+        UUID originAccountId,
         String targetCbu,
         BigDecimal amount,
         String description,

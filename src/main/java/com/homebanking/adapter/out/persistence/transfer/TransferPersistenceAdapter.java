@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 class TransferPersistenceAdapter implements TransferRepository {
 
     private final SpringDataTransferRepository springDataRepository;
-    private final TransferMapper transferMapper;
+    private final TransferPersistenceMapper transferMapper;
 
     @Override
     public Transfer save(Transfer transfer) {
@@ -45,7 +46,7 @@ class TransferPersistenceAdapter implements TransferRepository {
     }
 
     @Override
-    public Optional<Transfer> findById(Long id) {
+    public Optional<Transfer> findById(UUID id) {
         return springDataRepository.findById(id)
                 .map(transferMapper::toDomain);
     }
@@ -57,12 +58,13 @@ class TransferPersistenceAdapter implements TransferRepository {
     }
 
     @Override
-    public List<Transfer> findByOriginAccountId(Long accountId) {
+    public List<Transfer> findByOriginAccountId(UUID accountId) {
         return springDataRepository.findByOriginAccountId(accountId)
                 .stream()
                 .map(transferMapper::toDomain)
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<Transfer> findPendingTransfers() {
@@ -84,3 +86,4 @@ class TransferPersistenceAdapter implements TransferRepository {
                 .collect(Collectors.toList());
     }
 }
+

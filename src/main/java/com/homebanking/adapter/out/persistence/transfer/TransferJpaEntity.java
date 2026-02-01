@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 import com.homebanking.domain.enums.TransferStatus;
@@ -43,14 +44,14 @@ import lombok.NoArgsConstructor;
 public class TransferJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(name = "idempotency_key", nullable = false, unique = true, length = 36)
     private String idempotencyKey;
 
     @Column(name = "origin_account_id", nullable = false)
-    private Long originAccountId;
+    private UUID originAccountId;
 
     @Column(name = "target_cbu", nullable = false, length = 22)
     private String targetCbu;

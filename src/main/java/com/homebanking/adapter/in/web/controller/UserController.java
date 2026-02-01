@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -24,7 +25,7 @@ public class UserController {
     private final UserWebMapper userWebMapper;
 
     @PostMapping
-    public ResponseEntity<Map<String, Long>> register(
+    public ResponseEntity<Map<String, UUID>> register(
             @Valid @RequestBody RegisterUserRequest request) {
 
         RegisterUserInputRequest inputRequest = userWebMapper.toInputRequest(request);

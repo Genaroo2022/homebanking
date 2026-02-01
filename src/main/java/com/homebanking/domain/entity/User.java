@@ -15,12 +15,13 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
-    private Long id;
+    private UUID id;
     private UserEmail email;
     private UserPassword password;
     private UserFirstName name;
@@ -44,7 +45,7 @@ public class User {
     }
 
     // Factory Method: Reconstitution from Persistence
-    public static User withId(Long id, String email, String password, String name, String lastName, String dni, LocalDate birthDate, String address, LocalDateTime createdAt) {
+    public static User withId(UUID id, String email, String password, String name, String lastName, String dni, LocalDate birthDate, String address, LocalDateTime createdAt) {
         validateStructuralData(id, createdAt);
         validateUserData(email, password, name, lastName, dni, birthDate, address);
         return hydrate(
@@ -78,7 +79,7 @@ public class User {
         validateMandatoryFields(name, lastName, email, password, dni, address);
     }
 
-    private static User hydrate(Long id, UserEmail email, UserPassword password, UserFirstName name, UserLastName lastName,
+    private static User hydrate(UUID id, UserEmail email, UserPassword password, UserFirstName name, UserLastName lastName,
                                 UserDni dni, UserBirthDate birthDate, UserAddress address, LocalDateTime createdAt) {
         User user = new User();
         user.id = id;
@@ -108,7 +109,7 @@ public class User {
         validateNonBlankField(address, DomainErrorMessages.MANDATORY_FIELDS);
     }
 
-    private static void validateStructuralData(Long id, LocalDateTime createdAt) {
+    private static void validateStructuralData(UUID id, LocalDateTime createdAt) {
         if (id == null) {
             throw new InvalidUserDataException(DomainErrorMessages.ID_REQUIRED);
         }
@@ -117,4 +118,3 @@ public class User {
         }
     }
 }
-

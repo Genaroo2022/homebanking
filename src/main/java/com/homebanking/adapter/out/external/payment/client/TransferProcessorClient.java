@@ -11,11 +11,9 @@ package com.homebanking.adapter.out.external.payment.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
 import java.math.BigDecimal;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Mock Implementation de TransferProcessorClient
@@ -42,8 +40,8 @@ public class TransferProcessorClient {
      * @throws PermanentException Si error permanente (no reintentable)
      */
     public boolean submitTransfer(
-            Long transferId,
-            Long originAccountId,
+            UUID transferId,
+            UUID originAccountId,
             String targetCbu,
             BigDecimal amount,
             String description,

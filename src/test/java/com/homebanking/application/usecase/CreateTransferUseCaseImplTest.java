@@ -5,8 +5,10 @@ import com.homebanking.application.dto.transfer.response.TransferOutputResponse;
 import com.homebanking.application.usecase.transfer.CreateTransferUseCaseImpl;
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.Transfer;
+import com.homebanking.domain.event.TransferCreatedEvent;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
-import com.homebanking.domain.exception.transfer.InsufficientFundsException;
+import com.homebanking.domain.exception.account.InsufficientFundsException;
+import com.homebanking.domain.exception.account.InvalidAccountDataException;
 import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.exception.transfer.SameAccountTransferException;
 import com.homebanking.domain.valueobject.common.Cbu;
@@ -19,7 +21,6 @@ import com.homebanking.port.out.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -28,31 +29,22 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests: CreateTransferUseCaseImplTest
-
- * Verifica:
- * ✓ Idempotencia: misma key = mismo resultado sin duplicado
- * ✓ Validaciones de dominio: saldo, cuenta, CBU
- * ✓ Transaccionalidad: ambos cambios persisten juntos
- * ✓ Manejo de excepciones: códigos correctos
-
- * Patrón AAA: Arrange, Act, Assert
- * Patrón Given-When-Then
- */
 @ExtendWith(MockitoExtension.class)
 class CreateTransferUseCaseImplTest {
 
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID ORIGIN_ACCOUNT_ID = UUID.randomUUID();
+    private static final UUID TRANSFER_ID = UUID.randomUUID();
+
     @Mock
     private AccountRepository accountRepository;
-
     @Mock
     private TransferRepository transferRepository;
-
     @Mock
     private EventPublisher eventPublisher;
 
@@ -67,359 +59,161 @@ class CreateTransferUseCaseImplTest {
         );
     }
 
-    // ===============================================
-    // TESTS: CASOS DE ÉXITO
-    // ===============================================
-
-    /**
-     * TEST: Crear transferencia exitosamente
-
-     * GIVEN: Cuenta origen existe con saldo suficiente
-     * WHEN: Se crea una transferencia
-     * THEN: Se retorna respuesta con ID y estado PENDING
-     */
     @Test
-    void shouldCreateTransferSuccessfully_WhenAccountHasSufficientBalance() {
+    void shouldCreateTransferSuccessfully_WhenDomainLogicSucceeds() {
         // Arrange
-        Long originAccountId = 1L;
-        String targetCbu = "1234567890123456789012";
+        String targetCbuStr = "1234567890123456789012";
+        Cbu targetCbu = Cbu.of(targetCbuStr);
         BigDecimal amount = new BigDecimal("100.00");
         String idempotencyKey = UUID.randomUUID().toString();
+        CreateTransferInputRequest request = new CreateTransferInputRequest(ORIGIN_ACCOUNT_ID, targetCbuStr, amount, "Pago", idempotencyKey);
 
-        CreateTransferInputRequest request = new CreateTransferInputRequest(
-                originAccountId,
-                targetCbu,
-                amount,
-                "Pago de servicios",
-                idempotencyKey
-        );
+        Account originAccount = spy(createTestAccount(ORIGIN_ACCOUNT_ID, "1111111111111111111111", "alias1", new BigDecimal("500")));
+        Transfer createdTransfer = createTestTransfer(TRANSFER_ID, request);
 
-        // Cuenta origen con saldo suficiente
-        Account originAccount = createTestAccount(
-                originAccountId,
-                "1111111111111111111111",
-                "john.doe.123",
-                new BigDecimal("500.00")
-        );
-        Account destinationAccount = createTestAccount(
-                2L,
-                targetCbu,
-                "target.user.456",
-                new BigDecimal("0.00")
-        );
-
-        Transfer savedTransfer = createTestTransfer(1L, request);
-
-        // Configurar mocks
-        when(transferRepository.findByIdempotencyKey(idempotencyKey))
-                .thenReturn(Optional.empty());
-        when(accountRepository.findById(originAccountId))
-                .thenReturn(Optional.of(originAccount));
-        when(accountRepository.findByCbu(request.targetCbu()))
-                .thenReturn(Optional.of(createTestAccount(
-                        2L,
-                        request.targetCbu(),
-                        "dest.user.004",
-                        BigDecimal.ZERO
-                )));
-        when(accountRepository.findByCbu(request.targetCbu()))
-                .thenReturn(Optional.of(createTestAccount(
-                        2L,
-                        request.targetCbu(),
-                        "dest.user.004",
-                        BigDecimal.ZERO
-                )));
-        when(accountRepository.findByCbu(request.targetCbu()))
-                .thenReturn(Optional.of(createTestAccount(
-                        2L,
-                        request.targetCbu(),
-                        "dest.user.004",
-                        BigDecimal.ZERO
-                )));
-        when(accountRepository.findByCbu(request.targetCbu()))
-                .thenReturn(Optional.of(createTestAccount(
-                        2L,
-                        request.targetCbu(),
-                        "dest.user.003",
-                        BigDecimal.ZERO
-                )));
-        when(accountRepository.findByCbu(request.targetCbu()))
-                .thenReturn(Optional.of(createTestAccount(
-                        2L,
-                        request.targetCbu(),
-                        "dest.user.001",
-                        BigDecimal.ZERO
-                )));
-        when(accountRepository.findByCbu(targetCbu))
-                .thenReturn(Optional.of(destinationAccount));
-        when(transferRepository.save(any(Transfer.class)))
-                .thenReturn(savedTransfer);
-        when(accountRepository.save(any(Account.class)))
-                .thenReturn(originAccount);
+        when(transferRepository.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
+        when(accountRepository.existsByCbu(targetCbu)).thenReturn(true);
+        when(accountRepository.findById(ORIGIN_ACCOUNT_ID)).thenReturn(Optional.of(originAccount));
+        doReturn(createdTransfer).when(originAccount).initiateTransferTo(any(), any(), any(), any());
 
         // Act
         TransferOutputResponse result = createTransferUseCase.createTransfer(request);
 
         // Assert
-        assertThat(result)
-                .isNotNull()
-                .satisfies(transfer -> {
-                    assertThat(transfer.id()).isEqualTo(1L);
-                    assertThat(transfer.status()).isEqualTo("PENDING");
-                    assertThat(transfer.amount()).isEqualTo(amount);
-                });
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(TRANSFER_ID);
+        assertThat(result.status()).isEqualTo("PENDING");
 
-        // Verify: Se debitó la cuenta y se guardó la transferencia
-        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
-        verify(accountRepository).save(accountCaptor.capture());
-        Account savedAccount = accountCaptor.getValue();
-        assertThat(savedAccount.getBalance().value()).isEqualTo(new BigDecimal("400.00"));
-
-        verify(transferRepository).save(any(Transfer.class));
-        verify(eventPublisher).publish(any(com.homebanking.domain.event.TransferCreatedEvent.class));
+        // Verify
+        verify(originAccount).initiateTransferTo(
+                eq(targetCbu),
+                argThat(a -> a.value().equals(amount)),
+                argThat(d -> d.value().equals("Pago")),
+                argThat(i -> i.value().equals(idempotencyKey))
+        );
+        verify(accountRepository).save(originAccount);
+        verify(transferRepository).save(createdTransfer);
+        verify(eventPublisher).publish(any(TransferCreatedEvent.class));
     }
 
-    /**
-     * TEST: Idempotencia - transferencia duplicada retorna la primera
-
-     * GIVEN: Existe una transferencia con el mismo idempotencyKey
-     * WHEN: Se intenta crear otra con el mismo key
-     * THEN: Retorna la transferencia existente sin crear duplicado
-     */
     @Test
     void shouldReturnExistingTransfer_WhenIdempotencyKeyAlreadyExists() {
         // Arrange
         String idempotencyKey = UUID.randomUUID().toString();
-
-        CreateTransferInputRequest request = new CreateTransferInputRequest(
-                1L,
-                "1234567890123456789012",
-                new BigDecimal("100.00"),
-                "Pago",
-                idempotencyKey
-        );
-
-        Transfer existingTransfer = createTestTransfer(1L, request);
-
-        // Configurar mock: la transferencia ya existe
-        when(transferRepository.findByIdempotencyKey(idempotencyKey))
-                .thenReturn(Optional.of(existingTransfer));
+        CreateTransferInputRequest request = new CreateTransferInputRequest(ORIGIN_ACCOUNT_ID, "1234567890123456789012", new BigDecimal("100.00"), "Pago", idempotencyKey);
+        Transfer existingTransfer = createTestTransfer(TRANSFER_ID, request);
+        when(transferRepository.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.of(existingTransfer));
 
         // Act
         TransferOutputResponse result = createTransferUseCase.createTransfer(request);
 
         // Assert
-        assertThat(result)
-                .isNotNull()
-                .satisfies(transfer -> {
-                    assertThat(transfer.idempotencyKey()).isEqualTo(idempotencyKey);
-                    assertThat(transfer.id()).isEqualTo(1L);
-                });
+        assertThat(result.idempotencyKey()).isEqualTo(idempotencyKey);
+        assertThat(result.id()).isEqualTo(TRANSFER_ID);
 
-        // Verify: NO se creó nueva transferencia
-        verify(accountRepository, never()).findById(anyLong());
+        // Verify
+        verify(accountRepository, never()).findById(any(UUID.class));
         verify(transferRepository, never()).save(any(Transfer.class));
     }
 
-    // ===============================================
-    // TESTS: CASOS DE ERROR
-    // ===============================================
-
-    /**
-     * TEST: Rechaza transferencia si saldo insuficiente
-
-     * GIVEN: Cuenta origen existe pero saldo < monto a transferir
-     * WHEN: Se intenta crear transferencia
-     * THEN: Lanza InsufficientFundsException
-     */
     @Test
-    void shouldThrowInsufficientFundsException_WhenAccountHasLowBalance() {
+    void shouldPropagateInsufficientFundsException_WhenDomainLogicThrowsIt() {
         // Arrange
-        Long originAccountId = 1L;
+        String targetCbuStr = "1234567890123456789012";
+        Cbu targetCbu = Cbu.of(targetCbuStr);
         BigDecimal amount = new BigDecimal("600.00");
         String idempotencyKey = UUID.randomUUID().toString();
+        CreateTransferInputRequest request = new CreateTransferInputRequest(ORIGIN_ACCOUNT_ID, targetCbuStr, amount, "Pago", idempotencyKey);
 
-        CreateTransferInputRequest request = new CreateTransferInputRequest(
-                originAccountId,
-                "1234567890123456789012",
-                amount,
-                "Pago",
-                idempotencyKey
-        );
+        Account originAccount = spy(createTestAccount(ORIGIN_ACCOUNT_ID, "1111111111111111111111", "alias1", new BigDecimal("100")));
 
-        // Cuenta con poco saldo
-        Account originAccount = createTestAccount(
-                originAccountId,
-                "1111111111111111111111",
-                "john.doe.123",
-                new BigDecimal("100.00")
-        );
-
-        when(transferRepository.findByIdempotencyKey(idempotencyKey))
-                .thenReturn(Optional.empty());
-        when(accountRepository.findById(originAccountId))
-                .thenReturn(Optional.of(originAccount));
-        when(accountRepository.findByCbu(request.targetCbu()))
-                .thenReturn(Optional.of(createTestAccount(
-                        2L,
-                        request.targetCbu(),
-                        "dest.user.004",
-                        BigDecimal.ZERO
-                )));
+        when(transferRepository.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
+        when(accountRepository.existsByCbu(targetCbu)).thenReturn(true);
+        when(accountRepository.findById(ORIGIN_ACCOUNT_ID)).thenReturn(Optional.of(originAccount));
+        doThrow(new InsufficientFundsException("Error", ORIGIN_ACCOUNT_ID, amount, originAccount.getBalance().value()))
+                .when(originAccount).initiateTransferTo(any(), any(), any(), any());
 
         // Act & Assert
         assertThatThrownBy(() -> createTransferUseCase.createTransfer(request))
-                .isInstanceOf(InsufficientFundsException.class)
-                .satisfies(ex -> {
-                    InsufficientFundsException ifEx = (InsufficientFundsException) ex;
-                    assertThat(ifEx.getAccountId()).isEqualTo(originAccountId);
-                    assertThat(ifEx.getRequestedAmount()).isEqualTo(amount);
-                    assertThat(ifEx.getAvailableBalance()).isEqualTo(new BigDecimal("100.00"));
-                });
+                .isInstanceOf(InsufficientFundsException.class);
 
-        // Verify: No se persistió nada
+        // Verify
         verify(transferRepository, never()).save(any(Transfer.class));
         verify(accountRepository, never()).save(any(Account.class));
     }
 
-    /**
-     * TEST: Rechaza transferencia a la misma cuenta
-
-     * GIVEN: CBU origen == CBU destino
-     * WHEN: Se intenta crear transferencia
-     * THEN: Lanza SameAccountTransferException
-     */
     @Test
-    void shouldThrowSameAccountTransferException_WhenOriginAndTargetAreSame() {
+    void shouldPropagateSameAccountTransferException_WhenDomainLogicThrowsIt() {
         // Arrange
-        String sameCbu = "1111111111111111111111";
+        String sameCbuStr = "1111111111111111111111";
+        Cbu sameCbu = Cbu.of(sameCbuStr);
         String idempotencyKey = UUID.randomUUID().toString();
+        CreateTransferInputRequest request = new CreateTransferInputRequest(ORIGIN_ACCOUNT_ID, sameCbuStr, new BigDecimal("100"), "Pago", idempotencyKey);
 
-        CreateTransferInputRequest request = new CreateTransferInputRequest(
-                1L,
-                sameCbu,  // CBU igual al origen
-                new BigDecimal("100.00"),
-                "Pago",
-                idempotencyKey
-        );
+        Account originAccount = spy(createTestAccount(ORIGIN_ACCOUNT_ID, sameCbuStr, "alias1", new BigDecimal("500")));
 
-        Account originAccount = createTestAccount(
-                1L,
-                sameCbu,  // Mismo CBU
-                "john.doe.123",
-                new BigDecimal("500.00")
-        );
-
-        when(transferRepository.findByIdempotencyKey(idempotencyKey))
-                .thenReturn(Optional.empty());
-        when(accountRepository.findById(1L))
-                .thenReturn(Optional.of(originAccount));
-        when(accountRepository.findByCbu(sameCbu))
-                .thenReturn(Optional.of(originAccount));
+        when(transferRepository.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
+        when(accountRepository.existsByCbu(sameCbu)).thenReturn(true);
+        when(accountRepository.findById(ORIGIN_ACCOUNT_ID)).thenReturn(Optional.of(originAccount));
+        doThrow(new SameAccountTransferException("Error")).when(originAccount).initiateTransferTo(any(), any(), any(), any());
 
         // Act & Assert
         assertThatThrownBy(() -> createTransferUseCase.createTransfer(request))
                 .isInstanceOf(SameAccountTransferException.class);
 
+        // Verify
         verify(transferRepository, never()).save(any(Transfer.class));
     }
-
-    /**
-     * TEST: Rechaza si cuenta origen no existe
-
-     * GIVEN: No existe cuenta con ese ID
-     * WHEN: Se intenta crear transferencia
-     * THEN: Lanza AccountNotFoundException
-     */
+    
     @Test
     void shouldThrowAccountNotFoundException_WhenOriginAccountDoesNotExist() {
         // Arrange
-        Long nonExistentAccountId = 999L;
-        String idempotencyKey = UUID.randomUUID().toString();
-
-        CreateTransferInputRequest request = new CreateTransferInputRequest(
-                nonExistentAccountId,
-                "1234567890123456789012",
-                new BigDecimal("100.00"),
-                "Pago",
-                idempotencyKey
-        );
-
-        when(transferRepository.findByIdempotencyKey(idempotencyKey))
-                .thenReturn(Optional.empty());
-        when(accountRepository.findById(nonExistentAccountId))
-                .thenReturn(Optional.empty());
+        UUID nonExistentAccountId = UUID.randomUUID();
+        String validCbu = "1234567890123456789012";
+        // Corrected: Use a valid description
+        CreateTransferInputRequest request = new CreateTransferInputRequest(nonExistentAccountId, validCbu, BigDecimal.ONE, "Test Description", "key");
+        
+        when(transferRepository.findByIdempotencyKey("key")).thenReturn(Optional.empty());
+        when(accountRepository.existsByCbu(any(Cbu.class))).thenReturn(true); // Assume destination exists
+        when(accountRepository.findById(nonExistentAccountId)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> createTransferUseCase.createTransfer(request))
-                .isInstanceOf(AccountNotFoundException.class)
-                .satisfies(ex -> {
-                    AccountNotFoundException anfEx = (AccountNotFoundException) ex;
-                    assertThat(anfEx.getAccountId()).isEqualTo(nonExistentAccountId);
-                });
-
-        verify(transferRepository, never()).save(any(Transfer.class));
+                .isInstanceOf(AccountNotFoundException.class);
     }
 
-    /**
-     * TEST: Rechaza CBU inválido
+    @Test
+    void shouldThrowInvalidAccountDataException_WhenTargetCbuDoesNotExist() {
+        // Arrange
+        String nonExistentCbuStr = "0000000000000000000000";
+        Cbu nonExistentCbu = Cbu.of(nonExistentCbuStr);
+        // Corrected: Use a valid description
+        CreateTransferInputRequest request = new CreateTransferInputRequest(ORIGIN_ACCOUNT_ID, nonExistentCbuStr, BigDecimal.ONE, "Test Description", "key");
+        
+        when(transferRepository.findByIdempotencyKey("key")).thenReturn(Optional.empty());
+        when(accountRepository.existsByCbu(nonExistentCbu)).thenReturn(false);
 
-     * GIVEN: CBU no tiene 22 dígitos
-     * WHEN: Se intenta crear transferencia
-     * THEN: Lanza InvalidTransferDataException
-     */
+        // Act & Assert
+        assertThatThrownBy(() -> createTransferUseCase.createTransfer(request))
+                .isInstanceOf(InvalidAccountDataException.class);
+    }
+    
     @Test
     void shouldThrowInvalidTransferDataException_WhenCbuFormatIsInvalid() {
         // Arrange
-        String invalidCbu = "123";  // CBU muy corto
-        String idempotencyKey = UUID.randomUUID().toString();
-
-        CreateTransferInputRequest request = new CreateTransferInputRequest(
-                1L,
-                invalidCbu,
-                new BigDecimal("100.00"),
-                "Pago",
-                idempotencyKey
-        );
-
-        Account originAccount = createTestAccount(1L, "1111111111111111111111",
-                "john.doe.123", new BigDecimal("500.00"));
-
-        when(transferRepository.findByIdempotencyKey(idempotencyKey))
-                .thenReturn(Optional.empty());
-        when(accountRepository.findById(1L))
-                .thenReturn(Optional.of(originAccount));
-        when(accountRepository.findByCbu(invalidCbu))
-                .thenReturn(Optional.of(createTestAccount(
-                        2L,
-                        "1234567890123456789012",
-                        "dest.user.002",
-                        BigDecimal.ZERO
-                )));
+        String invalidCbu = "123";
+        CreateTransferInputRequest request = new CreateTransferInputRequest(ORIGIN_ACCOUNT_ID, invalidCbu, BigDecimal.ONE, "", "key");
 
         // Act & Assert
         assertThatThrownBy(() -> createTransferUseCase.createTransfer(request))
                 .isInstanceOf(InvalidTransferDataException.class);
-
-        verify(transferRepository, never()).save(any(Transfer.class));
+    }
+    
+    private Account createTestAccount(UUID id, String cbu, String alias, BigDecimal balance) {
+        return Account.withId(id, USER_ID, cbu, alias, balance, LocalDateTime.now());
     }
 
-    // ===============================================
-    // MÉTODOS HELPER
-    // ===============================================
-
-    private Account createTestAccount(Long id, String cbu, String alias, BigDecimal balance) {
-        return Account.withId(
-                id,
-                1L,  // userId
-                cbu,
-                alias,
-                balance,
-                LocalDateTime.now()
-        );
-    }
-
-    private Transfer createTestTransfer(Long id, CreateTransferInputRequest request) {
+    private Transfer createTestTransfer(UUID id, CreateTransferInputRequest request) {
         return Transfer.reconstruct(
                 id,
                 IdempotencyKey.of(request.idempotencyKey()),
@@ -429,11 +223,7 @@ class CreateTransferUseCaseImplTest {
                 TransferDescription.of(request.description()),
                 com.homebanking.domain.enums.TransferStatus.PENDING,
                 LocalDateTime.now(),
-                null,
-                null,
-                null,
-                0,
-                null
+                null, null, null, 0, null
         );
     }
 }

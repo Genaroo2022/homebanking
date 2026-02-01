@@ -8,7 +8,9 @@ import com.homebanking.domain.exception.transfer.DestinationAccountNotFoundExcep
 import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.exception.transfer.TransferNotFoundException;
 import com.homebanking.domain.exception.user.InvalidUserDataException;
+import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
 import com.homebanking.domain.exception.user.UserAlreadyExistsException;
+import com.homebanking.application.exception.RateLimitExceededException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -61,6 +63,40 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyLoginAttempts(
+            TooManyLoginAttemptsException ex) {
+
+        log.warn("Demasiados intentos de login. Retry-After: {}s", ex.getRetryAfterSeconds());
+
+        ErrorResponse error = ErrorResponse.of(
+                "TOO_MANY_LOGIN_ATTEMPTS",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(error);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(
+            RateLimitExceededException ex) {
+
+        log.warn("Rate limit excedido. Retry-After: {}s", ex.getRetryAfterSeconds());
+
+        ErrorResponse error = ErrorResponse.of(
+                "RATE_LIMIT_EXCEEDED",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
                 .body(error);
     }
 

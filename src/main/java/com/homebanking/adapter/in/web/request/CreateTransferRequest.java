@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * Request: CreateTransferRequest
@@ -19,14 +20,14 @@ import java.math.BigDecimal;
 
  * Ejemplo JSON:
  * {
- *   "originAccountId": 1,
+ *   "originAccountId": "a4b6b0c2-9b1a-4b0e-8b0a-4b0c2d9b1a4b",
  *   "targetCbu": "1234567890123456789012",
  *   "amount": 100.50,
  *   "description": "Pago de servicios"
  * }
  */
 public record CreateTransferRequest(
-        @NotNull Long originAccountId,
+        @NotNull UUID originAccountId,
         @NotBlank String targetCbu,
         @NotNull @DecimalMin("0.01") BigDecimal amount,
         @NotBlank String description

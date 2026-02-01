@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/transfers")
 @RequiredArgsConstructor
@@ -40,13 +42,13 @@ public class TransferController {
     }
 
     @PostMapping("/{id}/retry")
-    public ResponseEntity<TransferResponse> retryTransfer(@PathVariable("id") Long transferId) {
+    public ResponseEntity<TransferResponse> retryTransfer(@PathVariable("id") UUID transferId) {
         TransferOutputResponse output = retryFailedTransferUseCase.retryFailedTransfer(transferId);
         return ResponseEntity.ok(transferWebMapper.toResponse(output));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TransferResponse> getTransferEndpoint(@PathVariable("id") Long transferId) {
+    public ResponseEntity<TransferResponse> getTransferEndpoint(@PathVariable("id") UUID transferId) {
         TransferOutputResponse output = getTransferUseCase.getTransfer(transferId);
         return ResponseEntity.ok(transferWebMapper.toResponse(output));
     }

@@ -4,11 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 public class MeResponse {
-    private Long id;
+    private UUID id;
     private String email;
     private String name;
     private String lastName;
@@ -17,7 +18,7 @@ public class MeResponse {
     @Data
     @Builder
     public static class AccountDto {
-        private Long id;
+        private UUID id;
         private String cbu;
         private String alias;
         private BigDecimal balance;

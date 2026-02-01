@@ -35,7 +35,7 @@ Es el corazón del software. No tiene dependencias externas ni de frameworks.
   * Incluye errores de destino inexistente (ej. `DestinationAccountNotFoundException`).
 * **`util/`**: Constantes y reglas de negocio compartidas (ej. `DomainErrorMessages`). Permite evitar "Magic Strings" y centralizar textos de error.
 *   **`service/`**: Lógica de dominio pura que orquesta interacciones entre múltiples entidades (a implementar).
-*   **`event/`**: 📢 Definición de eventos de dominio que representan sucesos importantes en el negocio (ej. `TransferCreatedEvent`).
+*   **`event/`**: 📢 Definición de eventos de dominio que representan sucesos importantes en el negocio (ej. `TransferCreatedEvent`).`r`n    * Incluye `LoginAttemptedEvent` para preparar detección de anomalías en autenticación.
 
 
 ### ⚙️ 2. Application Layer 
@@ -83,7 +83,7 @@ Implementación técnica de los puertos. Aquí reside la dependencia con framewo
     * `repository`: Interfaces que extienden `JpaRepository` (Magia de Spring Data).
     * `mapper`: Convierte `Domain Model` ↔ `Persistence Entity`.
     * `adapter`: Implementación del Puerto de Salida (`Port Out`). Es el encargado de llamar al repositorio y realizar el mapeo.
-* **`event/`**: Implementación de puertos de salida para la publicación de eventos. Por ejemplo, `SpringEventPublisherAdapter` implementa el puerto `EventPublisher` usando el sistema de eventos de Spring.
+* **`event/`**: Implementación de puertos de salida para la publicación de eventos. Por ejemplo, `SpringEventPublisherAdapter` implementa el puerto `EventPublisher` usando el sistema de eventos de Spring.`r`n* **`security/`**: Adaptadores de seguridad internos (ej. rate limiting por IP para login).
 * **`external/`**: Integraciones con terceros, aisladas por contexto:
     * `audit`: Sistemas de log y auditoría.
     * `notification`: Envío de correos/SMS.
@@ -153,7 +153,7 @@ Opté por un diseño de **Entidades Ricas** en contraposición al antipatrón de
 ### 🔑 Seguridad y Autenticación
 * **Stateless:** Se utiliza **JWT (JSON Web Tokens)** para la autenticación. El servidor no mantiene sesión.
 * **Filtros:** Se implementó un `JwtAuthenticationFilter` personalizado que intercepta las peticiones y valida la firma del token antes de llegar al dominio.
-* **User Details:** Adaptador `CustomUserDetailsService` que conecta la seguridad de Spring con nuestro puerto de repositorio `UserRepository`.
+* **User Details:** Adaptador `CustomUserDetailsService` que conecta la seguridad de Spring con nuestro puerto de repositorio `UserRepository`.`r`n* **Defensa en profundidad:**`r`n  * Rate limiting por IP en `/auth/login` (adapter out security).`r`n  * Backoff exponencial por usuario (LoginAttemptService + Redis).`r`n  * Evento `LoginAttemptedEvent` publicado para futura detección de anomalías (planificado con Kafka; TODO en listener).
 
 ### 🚨 Manejo Centralizado de Errores (Global Exception Handler)
 Se ha implementado un patrón `RestControllerAdvice` para interceptar excepciones en toda la aplicación y traducirlas a respuestas JSON estandarizadas. Esto evita exponer trazas de error (Stack Traces) al cliente.
@@ -190,3 +190,25 @@ Se utiliza un handler específico de transferencias con mayor prioridad y un han
 * **Capa Dominio (Entidad):** Validaciones de negocio e integridad (ej: edad mínima, algoritmo de tarjeta) en el constructor de la entidad.
 
 ---
+
+* **dto/**: Objetos inmutables (Records) para transporte de datos.
+    * equest: Estructuras de entrada (Comandos) que reciben los casos de uso. Encapsulan los datos necesarios para ejecutar una acción.
+    * esponse: Estructuras de salida que devuelven los datos procesados, desacoplando el dominio de la vista API.
+* **service/**: Servicios de aplicación que separan orquestación y transacciones.
+    * TransferBatchProcessingService: orquesta procesamiento en background (scheduler).
+    * TransferStateTransitionService: aplica transiciones de estado con límites transaccionales claros.
+    * service/transfer/action: estrategias por resultado (SUCCESS / RECOVERABLE / NON_RECOVERABLE).
+
+
+6.  **➡️ Adaptador de Salida de Eventos (SpringEventPublisherAdapter):** La implementación del puerto EventPublisher utiliza el ApplicationEventPublisher de Spring para difundir el TransferCreatedEvent.
+7.  **⬅️ Adaptador de Entrada de Eventos (TransferEventListener):**
+    *   Un listener anotado con @EventListener y @Async se suscribe a TransferCreatedEvent.
+    *   Al recibir el evento, se activa en un hilo de ejecución separado, desacoplando completamente el procesamiento del flujo de creación.
+8.  **⚙️ Orquestación del Procesamiento:** El listener actúa como un nuevo adaptador de entrada, llamando al puerto ProcessTransferInputPort con el ID de la transferencia.
+9.  **🛠️ Núcleo de Procesamiento (Orquestador):**
+    *   ProcessTransferUseCaseImpl coordina el flujo y realiza la llamada externa fuera de transacciones.
+    *   Delegación transaccional a TransferStateTransitionService para preparar y finalizar en transacciones cortas.
+10. **🛠️ Transiciones de Estado (Policy + Actions):**
+    *   TransferStateTransitionService aplica reglas de elegibilidad y transiciones.
+    *   Estrategias por resultado (service/transfer/action) para SUCCESS / RECOVERABLE / NON_RECOVERABLE.
+
