@@ -2,7 +2,7 @@ package com.homebanking.adapter.out.persistence.account;
 
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.valueobject.common.Cbu;
-import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.account.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -59,3 +59,5 @@ class AccountPersistenceAdapter implements AccountRepository {
         return springDataAccountRepository.existsByCbu(cbu.value());
     }
 }
+
+

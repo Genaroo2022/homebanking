@@ -9,3 +9,5 @@ public record DepositAccountRequest(
         @DecimalMin(value = "0.01", message = "El monto debe ser mayor a 0.01")
         BigDecimal amount
 ) {}
+
+

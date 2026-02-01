@@ -1,7 +1,7 @@
 package com.homebanking.adapter.out.security;
 
 import com.homebanking.application.dto.security.RateLimitStatus;
-import com.homebanking.port.out.LoginRateLimiter;
+import com.homebanking.port.out.security.LoginRateLimiter;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
@@ -57,3 +57,5 @@ public class LoginRateLimiterAdapter implements LoginRateLimiter {
                 .build();
     }
 }
+
+

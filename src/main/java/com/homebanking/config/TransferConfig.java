@@ -11,10 +11,10 @@ import com.homebanking.port.in.transfer.CreateTransferInputPort;
 import com.homebanking.port.in.transfer.GetTransferInputPort;
 import com.homebanking.port.in.transfer.ProcessTransferInputPort;
 import com.homebanking.port.in.transfer.RetryTransferInputPort;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.EventPublisher;
-import com.homebanking.port.out.TransferProcessorOutputPort;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.event.EventPublisher;
+import com.homebanking.port.out.transfer.TransferProcessorOutputPort;
+import com.homebanking.port.out.transfer.TransferRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,17 +47,21 @@ public class TransferConfig {
     public CreateTransferInputPort createTransferUseCase(
             AccountRepository accountRepository,
             TransferRepository transferRepository,
-            EventPublisher eventPublisher) {
+            EventPublisher eventPublisher,
+            TransferMapper transferMapper) {
         return new CreateTransferUseCaseImpl(
                 accountRepository,
                 transferRepository,
-                eventPublisher
+                eventPublisher,
+                transferMapper
         );
     }
 
     @Bean
-    public GetTransferInputPort getTransferUseCase(TransferRepository transferRepository) {
-        return new GetTransferUseCaseImpl(transferRepository);
+    public GetTransferInputPort getTransferUseCase(
+            TransferRepository transferRepository,
+            TransferMapper transferMapper) {
+        return new GetTransferUseCaseImpl(transferRepository, transferMapper);
     }
 
     /**
@@ -103,5 +107,8 @@ public class TransferConfig {
         );
     }
 }
+
+
+
 
 

@@ -4,3 +4,4 @@ import com.homebanking.application.dto.registration.request.RegisterUserInputReq
 import com.homebanking.application.dto.registration.response.UserRegisteredOutputResponse;
 
 public interface RegisterUserInputPort {UserRegisteredOutputResponse register(RegisterUserInputRequest request);}
+

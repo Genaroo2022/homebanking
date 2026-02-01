@@ -5,3 +5,4 @@ package com.homebanking.application.dto.profile.request;
  * Email del usuario autenticado extraído del JWT.
  */
 public record GetUserProfileInputRequest(String email) {}
+

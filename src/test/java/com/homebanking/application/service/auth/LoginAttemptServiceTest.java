@@ -2,7 +2,7 @@ package com.homebanking.application.service.auth;
 
 import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
 import com.homebanking.domain.model.LoginAttempt;
-import com.homebanking.port.out.LoginAttemptRepository;
+import com.homebanking.port.out.security.LoginAttemptRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -134,3 +134,5 @@ class LoginAttemptServiceTest {
         assertThat(attempt.timestamp()).isNotNull();
     }
 }
+
+

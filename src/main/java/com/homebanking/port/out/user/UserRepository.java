@@ -1,4 +1,4 @@
-package com.homebanking.port.out;
+package com.homebanking.port.out.user;
 
 import com.homebanking.domain.entity.User;
 import java.util.Optional;
@@ -10,3 +10,5 @@ public interface UserRepository {
     Optional<User> findByEmail(String email);
     Optional<User> findByEmailOrDni(String email, String dni);
 }
+
+

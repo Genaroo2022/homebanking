@@ -37,3 +37,4 @@ public class UserController {
                 .body(Map.of("id", outputResponse.userId()));
     }
 }
+

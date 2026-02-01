@@ -7,7 +7,7 @@ import com.homebanking.domain.exception.transfer.TransferNotFoundException;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.in.transfer.ProcessTransferInputPort;
 import com.homebanking.port.in.transfer.RetryTransferInputPort;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.transfer.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,3 +37,5 @@ public class RetryFailedTransferUseCaseImpl implements RetryTransferInputPort {
         return processTransferUseCase.processTransfer(transferId);
     }
 }
+
+

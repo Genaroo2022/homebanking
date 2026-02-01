@@ -1,4 +1,4 @@
-package com.homebanking.port.out;
+package com.homebanking.port.out.security;
 
 import com.homebanking.domain.model.LoginAttempt;
 import java.util.List;
@@ -8,3 +8,6 @@ public interface LoginAttemptRepository {
     List<LoginAttempt> findRecentFailedAttempts(String username);
     void resetFailedAttempts(String username);
 }
+
+
+

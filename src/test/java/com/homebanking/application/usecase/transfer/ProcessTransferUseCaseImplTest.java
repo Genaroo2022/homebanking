@@ -6,7 +6,7 @@ import com.homebanking.application.mapper.TransferMapper;
 import com.homebanking.application.service.transfer.TransferStateTransitionService;
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.transfer.TransferProcessingException;
-import com.homebanking.port.out.TransferProcessorOutputPort;
+import com.homebanking.port.out.transfer.TransferProcessorOutputPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,3 +104,5 @@ class ProcessTransferUseCaseImplTest {
                 .isPresent();
     }
 }
+
+

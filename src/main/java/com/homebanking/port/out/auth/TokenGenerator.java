@@ -1,4 +1,4 @@
-package com.homebanking.port.out;
+package com.homebanking.port.out.auth;
 
 /**
  * Output Port: TokenGenerator
@@ -8,3 +8,6 @@ package com.homebanking.port.out;
 public interface TokenGenerator {
     String generateToken(String subject);
 }
+
+
+

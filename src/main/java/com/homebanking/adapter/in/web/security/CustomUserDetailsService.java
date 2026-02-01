@@ -1,7 +1,7 @@
 package com.homebanking.adapter.in.web.security;
 
 import com.homebanking.domain.util.DomainErrorMessages;
-import com.homebanking.port.out.UserRepository;
+import com.homebanking.port.out.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
@@ -29,10 +29,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                     return new UsernameNotFoundException(DomainErrorMessages.USER_NOT_FOUND);
                 });
         log.debug("UserDetails cargado para: {}", email);
-        return new User(
-                domainUser.getEmail().value(),
-                domainUser.getPassword().value(),
-                Collections.emptyList()
-        );
+        return User.withUsername(domainUser.getEmail().value())
+                .password(domainUser.getPassword().value())
+                .authorities(Collections.emptyList())
+                .build();
     }
 }
+
+

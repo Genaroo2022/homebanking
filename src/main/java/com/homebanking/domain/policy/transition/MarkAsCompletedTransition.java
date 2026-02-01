@@ -9,7 +9,7 @@ import com.homebanking.domain.util.DomainErrorMessages;
 public class MarkAsCompletedTransition implements TransferStateTransition {
     @Override
     public void execute(Transfer transfer) {
-        if (transfer.getStatus() != TransferStatus.PROCESSING) {
+        if (!isApplicable(transfer)) {
             throw new InvalidTransferDataException(
                     String.format(DomainErrorMessages.ONLY_PROCESSING_CAN_COMPLETE, transfer.getStatus())
             );
@@ -22,3 +22,5 @@ public class MarkAsCompletedTransition implements TransferStateTransition {
         return transfer.getStatus() == TransferStatus.PROCESSING;
     }
 }
+
+

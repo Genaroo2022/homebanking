@@ -19,3 +19,4 @@ public class AsyncConfig {
     // Default configuration uses SimpleAsyncTaskExecutor
     // Para producción: custom ThreadPoolTaskExecutor
 }
+

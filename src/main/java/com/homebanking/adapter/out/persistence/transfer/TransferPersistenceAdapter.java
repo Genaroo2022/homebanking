@@ -2,7 +2,7 @@
 package com.homebanking.adapter.out.persistence.transfer;
 
 import com.homebanking.domain.entity.Transfer;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.transfer.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -86,4 +86,6 @@ class TransferPersistenceAdapter implements TransferRepository {
                 .collect(Collectors.toList());
     }
 }
+
+
 

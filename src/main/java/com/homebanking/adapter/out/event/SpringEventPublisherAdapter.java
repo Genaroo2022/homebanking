@@ -1,6 +1,6 @@
 package com.homebanking.adapter.out.event;
 
-import com.homebanking.port.out.EventPublisher;
+import com.homebanking.port.out.event.EventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -16,3 +16,5 @@ public class SpringEventPublisherAdapter implements EventPublisher {
         applicationEventPublisher.publishEvent(event);
     }
 }
+
+

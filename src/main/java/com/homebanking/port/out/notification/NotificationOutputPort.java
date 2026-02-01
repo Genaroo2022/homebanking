@@ -1,4 +1,4 @@
-package com.homebanking.port.out;
+package com.homebanking.port.out.notification;
 
 import com.homebanking.domain.event.TransferCompletedEvent;
 import com.homebanking.domain.event.TransferFailedEvent;
@@ -16,3 +16,5 @@ public interface NotificationOutputPort {
      */
     void notifyTransferFailed(TransferFailedEvent event);
 }
+
+

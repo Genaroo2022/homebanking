@@ -5,7 +5,7 @@
  * Contrato para persistencia de transferencias.
  * Implementado por adapters de persistencia.
  */
-package com.homebanking.port.out;
+package com.homebanking.port.out.transfer;
 
 import com.homebanking.domain.entity.Transfer;
 import java.util.Optional;
@@ -49,3 +49,6 @@ public interface TransferRepository {
      */
     List<Transfer> findRetryableTransfers();
 }
+
+
+

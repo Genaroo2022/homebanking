@@ -7,3 +7,4 @@ import java.util.UUID;
  * Retorna solo el ID del usuario creado para seguridad.
  */
 public record UserRegisteredOutputResponse(UUID userId) {}
+

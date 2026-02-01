@@ -11,3 +11,5 @@ public record DepositAccountResponse(
         @JsonProperty("balance")
         BigDecimal balance
 ) {}
+
+

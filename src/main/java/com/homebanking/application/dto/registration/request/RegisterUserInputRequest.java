@@ -30,3 +30,4 @@ public record RegisterUserInputRequest(
         @NotBlank(message = "La dirección es obligatoria")
         String address
 ) {}
+

@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * Mapper: TransferPersistenceMapper
- *
+
  * Convierte entre entidad de dominio (Transfer) y JPA entity (TransferJpaEntity).
  * Responsable de la traducción bidireccional.
- *
+
  * Características:
  * ✓ toJpaEntity(): UNA LÍNEA (delegación pura)
  * ✓ toDomain(): Reconstruye Transfer desde JpaEntity
@@ -24,7 +24,7 @@ public class TransferPersistenceMapper {
 
     /**
      * Convierte Transfer (domain) → TransferJpaEntity (persistence)
-     *
+
      * SIMPLE: Solo delega al factory method de TransferJpaEntity.
      * El factory method maneja toda la lógica de construcción.
      *
@@ -37,7 +37,7 @@ public class TransferPersistenceMapper {
 
     /**
      * Convierte TransferJpaEntity (persistence) → Transfer (domain)
-     *
+
      * Reconstruye la entidad de dominio desde los datos persistidos.
      * Crea todos los Value Objects a partir de valores primitivos.
      *
@@ -62,3 +62,5 @@ public class TransferPersistenceMapper {
         );
     }
 }
+
+

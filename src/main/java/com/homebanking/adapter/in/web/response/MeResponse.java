@@ -24,3 +24,4 @@ public class MeResponse {
         private BigDecimal balance;
     }
 }
+

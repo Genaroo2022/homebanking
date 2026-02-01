@@ -1,4 +1,4 @@
-package com.homebanking.port.out;
+package com.homebanking.port.out.auth;
 
 /**
  * Output Port: PasswordHasher
@@ -9,3 +9,6 @@ public interface PasswordHasher {
     String hash(String rawPassword);
     boolean matches(String rawPassword, String hashedPassword);
 }
+
+
+

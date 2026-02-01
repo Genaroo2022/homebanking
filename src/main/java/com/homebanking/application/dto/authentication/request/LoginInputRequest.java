@@ -17,3 +17,4 @@ public record LoginInputRequest(
 
         String ipAddress
 ) {}
+

@@ -1,6 +1,6 @@
 package com.homebanking.adapter.in.web.security;
 
-import com.homebanking.port.out.TokenGenerator;
+import com.homebanking.port.out.auth.TokenGenerator;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -51,13 +51,11 @@ public class JwtService implements TokenGenerator {
 
 
     public boolean isTokenValid(String token, String username) {
-        try {
-            final String usernameInToken = extractUsername(token);
-            return usernameInToken != null && usernameInToken.equals(username) && !isTokenExpired(token);
-        } catch (Exception e) {
-            log.error("Error validando token contra usuario: {}", e.getMessage());
+        if (!validateToken(token)) {
             return false;
         }
+        final String usernameInToken = extractUsername(token);
+        return usernameInToken != null && usernameInToken.equals(username) && !isTokenExpired(token);
     }
 
     public boolean validateToken(String token) {
@@ -100,3 +98,5 @@ public class JwtService implements TokenGenerator {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
+
+

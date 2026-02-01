@@ -7,7 +7,7 @@ import com.homebanking.application.service.transfer.TransferStateTransitionServi
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.transfer.TransferProcessingException;
 import com.homebanking.port.in.transfer.ProcessTransferInputPort;
-import com.homebanking.port.out.TransferProcessorOutputPort;
+import com.homebanking.port.out.transfer.TransferProcessorOutputPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,4 +55,6 @@ public class ProcessTransferUseCaseImpl implements ProcessTransferInputPort {
         return TransferProcessingResult.recoverableFailure();
     }
 }
+
+
 

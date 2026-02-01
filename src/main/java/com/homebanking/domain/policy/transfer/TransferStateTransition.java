@@ -17,3 +17,5 @@ public interface TransferStateTransition {
     void execute(Transfer transfer);
     boolean isApplicable(Transfer transfer);
 }
+
+

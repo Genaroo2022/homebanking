@@ -2,6 +2,7 @@ package com.homebanking.application.usecase;
 
 import com.homebanking.application.dto.transfer.request.CreateTransferInputRequest;
 import com.homebanking.application.dto.transfer.response.TransferOutputResponse;
+import com.homebanking.application.mapper.TransferMapper;
 import com.homebanking.application.usecase.transfer.CreateTransferUseCaseImpl;
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.Transfer;
@@ -15,9 +16,9 @@ import com.homebanking.domain.valueobject.common.Cbu;
 import com.homebanking.domain.valueobject.transfer.IdempotencyKey;
 import com.homebanking.domain.valueobject.transfer.TransferAmount;
 import com.homebanking.domain.valueobject.transfer.TransferDescription;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.EventPublisher;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.event.EventPublisher;
+import com.homebanking.port.out.transfer.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +49,8 @@ class CreateTransferUseCaseImplTest {
     @Mock
     private EventPublisher eventPublisher;
 
+    private final TransferMapper transferMapper = new TransferMapper();
+
     private CreateTransferUseCaseImpl createTransferUseCase;
 
     @BeforeEach
@@ -55,7 +58,8 @@ class CreateTransferUseCaseImplTest {
         createTransferUseCase = new CreateTransferUseCaseImpl(
                 accountRepository,
                 transferRepository,
-                eventPublisher
+                eventPublisher,
+                transferMapper
         );
     }
 
@@ -227,3 +231,5 @@ class CreateTransferUseCaseImplTest {
         );
     }
 }
+
+

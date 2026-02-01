@@ -12,3 +12,5 @@ public record LoginAttemptedEvent(
         LocalDateTime occurredAt
 ) {
 }
+
+

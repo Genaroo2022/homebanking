@@ -32,3 +32,4 @@ public class RegisterUserRequest {
     @NotBlank(message = "La dirección es obligatoria")
     private String address;
 }
+

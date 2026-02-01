@@ -247,3 +247,5 @@ public final class DomainErrorMessages {
     public static final String CARD_ALREADY_INACTIVE =
             "La tarjeta ya está inactiva";
 }
+
+

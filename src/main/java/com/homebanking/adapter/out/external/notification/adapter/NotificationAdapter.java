@@ -2,7 +2,7 @@ package com.homebanking.adapter.out.external.notification.adapter;
 
 import com.homebanking.domain.event.TransferCompletedEvent;
 import com.homebanking.domain.event.TransferFailedEvent;
-import com.homebanking.port.out.NotificationOutputPort;
+import com.homebanking.port.out.notification.NotificationOutputPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -74,3 +74,5 @@ public class NotificationAdapter implements NotificationOutputPort {
         log.debug("Evento publicado exitosamente");
     }
 }
+
+

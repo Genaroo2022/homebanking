@@ -2,7 +2,7 @@ package com.homebanking.adapter.in.event;
 
 import com.homebanking.domain.event.TransferCompletedEvent;
 import com.homebanking.domain.event.TransferFailedEvent;
-import com.homebanking.port.out.NotificationOutputPort;
+import com.homebanking.port.out.notification.NotificationOutputPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,3 +31,5 @@ public class NotificationEventListener {
         notificationPort.notifyTransferFailed(event);
     }
 }
+
+

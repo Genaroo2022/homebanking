@@ -3,7 +3,7 @@ package com.homebanking.adapter.out.external.payment.adapter;
 import com.homebanking.adapter.out.external.payment.client.TransferProcessorClient;
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.transfer.TransferProcessingException;
-import com.homebanking.port.out.TransferProcessorOutputPort;
+import com.homebanking.port.out.transfer.TransferProcessorOutputPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -89,4 +89,6 @@ public class TransferProcessorAdapter implements TransferProcessorOutputPort {
         }
     }
 }
+
+
 

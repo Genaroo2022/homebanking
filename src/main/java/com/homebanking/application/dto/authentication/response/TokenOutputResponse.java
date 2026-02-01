@@ -5,3 +5,5 @@ package com.homebanking.application.dto.authentication.response;
  * Contiene el JWT generado tras autenticación exitosa.
  */
 public record TokenOutputResponse(String token) {}
+
+

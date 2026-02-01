@@ -32,3 +32,5 @@ class LoginRateLimiterAdapterTest {
         assertThat(third.retryAfterSeconds()).isGreaterThanOrEqualTo(1);
     }
 }
+
+

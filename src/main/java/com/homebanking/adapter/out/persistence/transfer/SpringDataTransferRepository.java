@@ -41,3 +41,5 @@ interface SpringDataTransferRepository extends JpaRepository<TransferJpaEntity, 
             TransferStatus status,
             Integer retryCount);
 }
+
+

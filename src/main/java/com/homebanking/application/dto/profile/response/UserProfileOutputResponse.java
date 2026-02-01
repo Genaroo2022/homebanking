@@ -22,3 +22,4 @@ public record UserProfileOutputResponse(
             BigDecimal balance
     ) {}
 }
+

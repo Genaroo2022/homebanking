@@ -2,11 +2,11 @@ package com.homebanking.application.usecase.transfer;
 
 import com.homebanking.application.dto.transfer.request.CreateTransferInputRequest;
 import com.homebanking.application.dto.transfer.response.TransferOutputResponse;
+import com.homebanking.application.mapper.TransferMapper;
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
 import com.homebanking.domain.exception.account.InvalidAccountDataException;
-import com.homebanking.domain.exception.transfer.DestinationAccountNotFoundException;
 import com.homebanking.domain.event.TransferCreatedEvent;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.domain.valueobject.common.Cbu;
@@ -14,14 +14,13 @@ import com.homebanking.domain.valueobject.transfer.IdempotencyKey;
 import com.homebanking.domain.valueobject.transfer.TransferAmount;
 import com.homebanking.domain.valueobject.transfer.TransferDescription;
 import com.homebanking.port.in.transfer.CreateTransferInputPort;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.EventPublisher;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.event.EventPublisher;
+import com.homebanking.port.out.transfer.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,6 +31,7 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
     private final AccountRepository accountRepository;
     private final TransferRepository transferRepository;
     private final EventPublisher eventPublisher;
+    private final TransferMapper transferMapper;
 
     @Override
     @Transactional
@@ -39,7 +39,7 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
         // 1. Idempotencia
         Optional<Transfer> existing = transferRepository.findByIdempotencyKey(request.idempotencyKey());
         if (existing.isPresent()) {
-            return toOutputResponse(existing.get());
+            return transferMapper.toDto(existing.get());
         }
 
         // 2. Conversión de Value Objects (Fail-Fast)
@@ -72,7 +72,7 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
         logTransferCreated(transfer);
         eventPublisher.publish(new TransferCreatedEvent(transfer.getId()));
 
-        return toOutputResponse(transfer);
+        return transferMapper.toDto(transfer);
     }
 
     private void validateDestinationExists(Cbu targetCbu) {
@@ -81,19 +81,6 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
         if (!accountRepository.existsByCbu(targetCbu)) {
             throw new InvalidAccountDataException(DomainErrorMessages.ACCOUNT_NOT_FOUND);
         }
-    }
-
-    private TransferOutputResponse toOutputResponse(Transfer transfer) {
-        return new TransferOutputResponse(
-                transfer.getId(),
-                transfer.getIdempotencyKey().value(),
-                transfer.getOriginAccountId(),
-                transfer.getTargetCbu().value(),
-                transfer.getAmount().value(),
-                transfer.getDescription().value(),
-                transfer.getStatus().name(),
-                transfer.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        );
     }
 
     private Account loadOriginAccount(UUID originAccountId) {
@@ -114,3 +101,6 @@ public class CreateTransferUseCaseImpl implements CreateTransferInputPort {
                 transfer.getId(), transfer.getIdempotencyKey().value());
     }
 }
+
+
+

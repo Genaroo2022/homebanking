@@ -8,3 +8,5 @@ public interface TransferProcessingAction {
 
     void apply(Transfer transfer, TransferProcessingResult result);
 }
+
+

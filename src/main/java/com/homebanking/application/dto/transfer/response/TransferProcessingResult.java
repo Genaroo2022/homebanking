@@ -24,3 +24,5 @@ public record TransferProcessingResult(
         return new TransferProcessingResult(Outcome.NON_RECOVERABLE_FAILURE, Optional.of(errorMessage));
     }
 }
+
+

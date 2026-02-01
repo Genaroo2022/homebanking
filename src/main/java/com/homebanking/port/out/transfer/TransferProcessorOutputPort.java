@@ -5,7 +5,7 @@
  * Abstracción para procesar transferencias (integración externa).
  * Permite múltiples implementaciones: mock, real API, etc.
  */
-package com.homebanking.port.out;
+package com.homebanking.port.out.transfer;
 
 import com.homebanking.domain.entity.Transfer;
 
@@ -20,3 +20,6 @@ public interface TransferProcessorOutputPort {
      */
     boolean processTransfer(Transfer transfer);
 }
+
+
+

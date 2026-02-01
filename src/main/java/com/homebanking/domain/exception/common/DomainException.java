@@ -5,3 +5,5 @@ public class DomainException extends RuntimeException {
         super(message);
     }
 }
+
+

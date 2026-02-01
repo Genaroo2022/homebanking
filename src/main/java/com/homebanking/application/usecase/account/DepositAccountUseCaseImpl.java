@@ -6,7 +6,7 @@ import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.in.account.DepositAccountInputPort;
-import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.account.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,3 +33,5 @@ public class DepositAccountUseCaseImpl implements DepositAccountInputPort {
         );
     }
 }
+
+

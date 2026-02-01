@@ -11,3 +11,4 @@ interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
     Optional<UserJpaEntity> findByEmailOrDni(String email, String dni);
     Optional<UserJpaEntity> findByEmail(String email);
 }
+

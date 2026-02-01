@@ -53,3 +53,4 @@ class UserJpaEntity {
         this.createdAt = createdAt;
     }
 }
+

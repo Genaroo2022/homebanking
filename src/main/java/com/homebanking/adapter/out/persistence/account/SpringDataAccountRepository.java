@@ -13,3 +13,4 @@ interface SpringDataAccountRepository extends JpaRepository<AccountJpaEntity, UU
     boolean existsByCbu(String cbu);
 
 }
+

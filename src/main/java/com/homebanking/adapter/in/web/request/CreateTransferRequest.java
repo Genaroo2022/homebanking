@@ -32,3 +32,5 @@ public record CreateTransferRequest(
         @NotNull @DecimalMin("0.01") BigDecimal amount,
         @NotBlank String description
 ) {}
+
+

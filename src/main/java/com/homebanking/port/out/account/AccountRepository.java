@@ -1,4 +1,4 @@
-package com.homebanking.port.out;
+package com.homebanking.port.out.account;
 
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.valueobject.common.Cbu;
@@ -14,3 +14,4 @@ public interface AccountRepository {
     Optional<Account> findByCbu(Cbu cbu);
     boolean existsByCbu(Cbu cbu);
 }
+

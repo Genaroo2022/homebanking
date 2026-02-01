@@ -22,3 +22,5 @@ public class PrepareForRetryTransition implements TransferStateTransition {
         return transfer.getStatus() == TransferStatus.FAILED && transfer.isRetryable();
     }
 }
+
+

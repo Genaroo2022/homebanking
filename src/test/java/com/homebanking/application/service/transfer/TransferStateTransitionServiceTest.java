@@ -10,8 +10,8 @@ import com.homebanking.domain.valueobject.common.Cbu;
 import com.homebanking.domain.valueobject.transfer.IdempotencyKey;
 import com.homebanking.domain.valueobject.transfer.TransferAmount;
 import com.homebanking.domain.valueobject.transfer.TransferDescription;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.transfer.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -105,4 +105,6 @@ class TransferStateTransitionServiceTest {
         );
     }
 }
+
+
 

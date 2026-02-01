@@ -29,3 +29,4 @@ public record CreateTransferInputRequest(
         @NotBlank(message = "La idempotency key es obligatoria")
         String idempotencyKey
 ) {}
+

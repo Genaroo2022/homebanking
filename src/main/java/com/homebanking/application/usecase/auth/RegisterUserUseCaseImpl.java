@@ -7,9 +7,9 @@ import com.homebanking.domain.entity.User;
 import com.homebanking.domain.exception.user.UserAlreadyExistsException;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.in.registration.RegisterUserInputPort;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.PasswordHasher;
-import com.homebanking.port.out.UserRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.auth.PasswordHasher;
+import com.homebanking.port.out.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,4 +131,6 @@ public class RegisterUserUseCaseImpl implements RegisterUserInputPort {
         return cleanName + "." + cleanLastName + "." + randomSuffix;
     }
 }
+
+
 

@@ -7,3 +7,5 @@ public record DepositAccountOutputResponse(
         UUID accountId,
         BigDecimal balance
 ) {}
+
+

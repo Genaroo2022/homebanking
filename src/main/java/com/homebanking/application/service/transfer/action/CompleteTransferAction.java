@@ -4,8 +4,9 @@ import com.homebanking.application.dto.transfer.response.TransferProcessingResul
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.account.InvalidAccountDataException;
+import com.homebanking.domain.policy.transition.MarkAsCompletedTransition;
 import com.homebanking.domain.util.DomainErrorMessages;
-import com.homebanking.port.out.AccountRepository;
+import com.homebanking.port.out.account.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,10 +23,12 @@ public class CompleteTransferAction implements TransferProcessingAction {
 
     @Override
     public void apply(Transfer transfer, TransferProcessingResult result) {
-        transfer.markAsCompleted();
+        new MarkAsCompletedTransition().execute(transfer);
         Account destinationAccount = accountRepository.findByCbu(transfer.getTargetCbu())
                 .orElseThrow(() -> new InvalidAccountDataException(DomainErrorMessages.ACCOUNT_NOT_FOUND));
         destinationAccount.deposit(transfer.getAmount().value());
         accountRepository.save(destinationAccount);
     }
 }
+
+

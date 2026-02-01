@@ -6,9 +6,9 @@ import com.homebanking.application.usecase.auth.RegisterUserUseCaseImpl;
 import com.homebanking.domain.entity.Account;
 import com.homebanking.domain.entity.User;
 import com.homebanking.domain.exception.user.UserAlreadyExistsException;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.PasswordHasher;
-import com.homebanking.port.out.UserRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.auth.PasswordHasher;
+import com.homebanking.port.out.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -154,4 +154,6 @@ class RegisterUserUseCaseImplTest {
         verify(accountRepository, never()).save(any(Account.class));
     }
 }
+
+
 

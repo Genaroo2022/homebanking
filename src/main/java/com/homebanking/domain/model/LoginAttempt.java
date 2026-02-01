@@ -9,3 +9,5 @@ public record LoginAttempt(
         boolean successful
 ) {
 }
+
+

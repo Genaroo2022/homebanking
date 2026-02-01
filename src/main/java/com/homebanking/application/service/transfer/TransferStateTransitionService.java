@@ -6,9 +6,11 @@ import com.homebanking.domain.entity.Transfer;
 import com.homebanking.domain.exception.account.InvalidAccountDataException;
 import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
 import com.homebanking.domain.exception.transfer.TransferNotFoundException;
+import com.homebanking.domain.policy.transition.MarkAsRejectedTransition;
+import com.homebanking.domain.policy.transition.TakeForProcessingTransition;
 import com.homebanking.domain.util.DomainErrorMessages;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.transfer.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -32,19 +34,14 @@ public class TransferStateTransitionService {
         Transfer transfer = transferRepository.findById(transferId)
                 .orElseThrow(() -> new TransferNotFoundException(DomainErrorMessages.TRANSFER_NOT_FOUND, transferId));
 
-        if (!transfer.isEligibleForProcessing()) {
-            throw new InvalidTransferDataException(
-                    String.format(DomainErrorMessages.INVALID_PROCESSING_TRANSITION, transfer.getStatus()));
-        }
+        new TakeForProcessingTransition().execute(transfer);
 
         if (!accountRepository.existsByCbu(transfer.getTargetCbu())) {
-            transfer.markAsProcessing();
-            transfer.markAsRejected(DomainErrorMessages.ACCOUNT_NOT_FOUND);
+            new MarkAsRejectedTransition(DomainErrorMessages.ACCOUNT_NOT_FOUND).execute(transfer);
             transferRepository.save(transfer);
             throw new InvalidAccountDataException(DomainErrorMessages.ACCOUNT_NOT_FOUND);
         }
 
-        transfer.markAsProcessing();
         return transferRepository.save(transfer);
     }
 
@@ -72,4 +69,6 @@ public class TransferStateTransitionService {
         return map;
     }
 }
+
+
 

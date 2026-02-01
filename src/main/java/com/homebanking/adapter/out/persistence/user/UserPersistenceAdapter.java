@@ -1,7 +1,7 @@
 package com.homebanking.adapter.out.persistence.user;
 
 import com.homebanking.domain.entity.User;
-import com.homebanking.port.out.UserRepository;
+import com.homebanking.port.out.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -35,3 +35,4 @@ class UserPersistenceAdapter implements UserRepository {
                 .map(userMapper::toDomainEntity);
     }
 }
+

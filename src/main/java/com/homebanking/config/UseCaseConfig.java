@@ -7,10 +7,12 @@ import com.homebanking.application.usecase.auth.RegisterUserUseCaseImpl;
 import com.homebanking.port.in.authentication.LoginUserInputPort;
 import com.homebanking.port.in.profile.GetUserProfileInputPort;
 import com.homebanking.port.in.registration.RegisterUserInputPort;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.PasswordHasher;
-import com.homebanking.port.out.TokenGenerator;
-import com.homebanking.port.out.UserRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.auth.PasswordHasher;
+import com.homebanking.port.out.auth.TokenGenerator;
+import com.homebanking.port.out.event.EventPublisher;
+import com.homebanking.port.out.security.LoginRateLimiter;
+import com.homebanking.port.out.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,8 +25,8 @@ public class UseCaseConfig {
             PasswordHasher passwordHasher,
             TokenGenerator tokenGenerator,
             LoginAttemptService loginAttemptService,
-            com.homebanking.port.out.LoginRateLimiter loginRateLimiter,
-            com.homebanking.port.out.EventPublisher eventPublisher) {
+            LoginRateLimiter loginRateLimiter,
+            EventPublisher eventPublisher) {
         return new LoginUserUseCaseImpl(
                 userRepository,
                 passwordHasher,
@@ -50,3 +52,6 @@ public class UseCaseConfig {
         return new RegisterUserUseCaseImpl(userRepository, passwordHasher, accountRepository);
     }
 }
+
+
+

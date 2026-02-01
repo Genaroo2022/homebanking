@@ -3,7 +3,7 @@ package com.homebanking.application.service.transfer;
 import com.homebanking.domain.entity.Transfer;
 import com.homebanking.port.in.transfer.ProcessTransferInputPort;
 import com.homebanking.port.in.transfer.RetryTransferInputPort;
-import com.homebanking.port.out.TransferRepository;
+import com.homebanking.port.out.transfer.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,4 +76,6 @@ public class TransferBatchProcessingService {
     private interface TransferBatchAction {
         void execute(Transfer transfer);
     }}
+
+
 

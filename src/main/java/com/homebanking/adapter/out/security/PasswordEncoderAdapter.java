@@ -1,6 +1,6 @@
 package com.homebanking.adapter.out.security;
 
-import com.homebanking.port.out.PasswordHasher;
+import com.homebanking.port.out.auth.PasswordHasher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -21,3 +21,5 @@ public class PasswordEncoderAdapter implements PasswordHasher {
         return passwordEncoder.matches(rawPassword, hashedPassword);
     }
 }
+
+

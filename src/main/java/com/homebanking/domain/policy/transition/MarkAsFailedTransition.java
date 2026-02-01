@@ -7,14 +7,20 @@ import com.homebanking.domain.policy.transfer.TransferStateTransition;
 import com.homebanking.domain.util.DomainErrorMessages;
 
 public class MarkAsFailedTransition implements TransferStateTransition {
+    private final String reason;
+
+    public MarkAsFailedTransition(String reason) {
+        this.reason = reason;
+    }
+
     @Override
     public void execute(Transfer transfer) {
-        if (transfer.getStatus() != TransferStatus.PROCESSING) {
+        if (!isApplicable(transfer)) {
             throw new InvalidTransferDataException(
                     String.format(DomainErrorMessages.ONLY_PROCESSING_CAN_FAIL, transfer.getStatus())
             );
         }
-        transfer.markAsFailed("Error temporal durante procesamiento.");
+        transfer.markAsFailed(reason);
     }
 
     @Override
@@ -22,3 +28,5 @@ public class MarkAsFailedTransition implements TransferStateTransition {
         return transfer.getStatus() == TransferStatus.PROCESSING;
     }
 }
+
+

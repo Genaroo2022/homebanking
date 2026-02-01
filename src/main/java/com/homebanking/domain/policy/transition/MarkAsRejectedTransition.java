@@ -7,6 +7,12 @@ import com.homebanking.domain.policy.transfer.TransferStateTransition;
 import com.homebanking.domain.util.DomainErrorMessages;
 
 public class MarkAsRejectedTransition implements TransferStateTransition {
+    private final String reason;
+
+    public MarkAsRejectedTransition(String reason) {
+        this.reason = reason;
+    }
+
     @Override
     public void execute(Transfer transfer) {
         if (!isApplicable(transfer)) {
@@ -14,7 +20,7 @@ public class MarkAsRejectedTransition implements TransferStateTransition {
                     String.format(DomainErrorMessages.CANNOT_REJECT_TRANSFER, transfer.getStatus())
             );
         }
-        transfer.markAsRejected("Rechazo automatico.");
+        transfer.markAsRejected(reason);
     }
 
     @Override
@@ -25,3 +31,5 @@ public class MarkAsRejectedTransition implements TransferStateTransition {
         return transfer.getStatus() == TransferStatus.FAILED && !transfer.isRetryable();
     }
 }
+
+

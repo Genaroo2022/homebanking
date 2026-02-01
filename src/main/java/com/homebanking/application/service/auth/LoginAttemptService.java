@@ -2,7 +2,7 @@ package com.homebanking.application.service.auth;
 
 import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
 import com.homebanking.domain.model.LoginAttempt;
-import com.homebanking.port.out.LoginAttemptRepository;
+import com.homebanking.port.out.security.LoginAttemptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +27,7 @@ public class LoginAttemptService {
         int consecutiveFailures = failedAttempts.size();
 
         if (consecutiveFailures >= MAX_FAILED_ATTEMPTS) {
-            LoginAttempt lastAttempt = failedAttempts.get(0); // Most recent is first
+            LoginAttempt lastAttempt = failedAttempts.getFirst(); // Most recent is first
             long delay = (long) (BASE_DELAY_SECONDS * Math.pow(2, consecutiveFailures - MAX_FAILED_ATTEMPTS));
             long secondsSinceLastAttempt = Duration.between(lastAttempt.timestamp(), LocalDateTime.now()).getSeconds();
 
@@ -48,3 +48,5 @@ public class LoginAttemptService {
         loginAttemptRepository.save(attempt);
     }
 }
+
+

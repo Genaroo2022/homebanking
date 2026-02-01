@@ -7,8 +7,8 @@ import com.homebanking.domain.entity.User;
 import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.domain.util.DomainErrorMessages;
 import com.homebanking.port.in.profile.GetUserProfileInputPort;
-import com.homebanking.port.out.AccountRepository;
-import com.homebanking.port.out.UserRepository;
+import com.homebanking.port.out.account.AccountRepository;
+import com.homebanking.port.out.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,4 +60,6 @@ public class GetUserProfileUseCaseImpl implements GetUserProfileInputPort {
         );
     }
 }
+
+
 
