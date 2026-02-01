@@ -1,25 +1,22 @@
 package com.homebanking.adapter.in.web.exception;
 
 import com.homebanking.adapter.in.web.response.ErrorResponse;
+import com.homebanking.application.exception.RateLimitExceededException;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
 import com.homebanking.domain.exception.account.InvalidAccountDataException;
 import com.homebanking.domain.exception.card.InvalidCardDataException;
-import com.homebanking.domain.exception.transfer.DestinationAccountNotFoundException;
-import com.homebanking.domain.exception.transfer.InvalidTransferDataException;
-import com.homebanking.domain.exception.transfer.TransferNotFoundException;
 import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
 import com.homebanking.domain.exception.user.UserAlreadyExistsException;
-import com.homebanking.application.exception.RateLimitExceededException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
@@ -148,22 +145,6 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    @ExceptionHandler(InvalidTransferDataException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTransferData(
-            InvalidTransferDataException ex) {
-
-        log.warn("Error de datos de transferencia: {}", ex.getMessage());
-
-        ErrorResponse error = ErrorResponse.of(
-                "INVALID_TRANSFER_DATA",
-                ex.getMessage()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(error);
-    }
-
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAccountNotFound(
             AccountNotFoundException ex) {
@@ -172,38 +153,6 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.of(
                 "ACCOUNT_NOT_FOUND",
-                ex.getMessage()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(error);
-    }
-
-    @ExceptionHandler(DestinationAccountNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleDestinationAccountNotFound(
-            DestinationAccountNotFoundException ex) {
-
-        log.warn("Cuenta destino no encontrada: {}", ex.getTargetCbu());
-
-        ErrorResponse error = ErrorResponse.of(
-                "DESTINATION_ACCOUNT_NOT_FOUND",
-                ex.getMessage()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(error);
-    }
-
-    @ExceptionHandler(TransferNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleTransferNotFound(
-            TransferNotFoundException ex) {
-
-        log.warn("Transferencia no encontrada: {}", ex.getTransferId());
-
-        ErrorResponse error = ErrorResponse.of(
-                "TRANSFER_NOT_FOUND",
                 ex.getMessage()
         );
 
@@ -241,5 +190,3 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 }
-
-

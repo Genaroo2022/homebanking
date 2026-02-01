@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+
 /**
  * Implementacion del caso de uso de autenticacion de usuario.
 
@@ -53,6 +54,18 @@ public class LoginUserUseCaseImpl implements LoginUserInputPort {
      */
     @Override
     public TokenOutputResponse login(LoginInputRequest request) {
+        checkRateLimit(request);
+        checkBackoff(request);
+
+        User user = authenticate(request);
+
+        handleSuccess(request);
+        String token = tokenGenerator.generateToken(user.getEmail().value());
+
+        return new TokenOutputResponse(token);
+    }
+
+    private void checkRateLimit(LoginInputRequest request) {
         RateLimitStatus rateLimitStatus = loginRateLimiter.checkLimit(request.ipAddress());
         if (!rateLimitStatus.allowed()) {
             publishLoginAttemptedEvent(request, false, true);
@@ -61,37 +74,45 @@ public class LoginUserUseCaseImpl implements LoginUserInputPort {
                     rateLimitStatus.retryAfterSeconds()
             );
         }
+    }
 
+    private void checkBackoff(LoginInputRequest request) {
         try {
             loginAttemptService.checkLoginAllowed(request.email());
         } catch (TooManyLoginAttemptsException ex) {
             publishLoginAttemptedEvent(request, false, true);
             throw ex;
         }
+    }
 
+    private User authenticate(LoginInputRequest request) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> {
                     log.warn("Intento de login con email no registrado: {} desde IP: {}",
                             request.email(), request.ipAddress());
-                    loginAttemptService.handleFailedAttempt(request.email(), request.ipAddress());
-                    publishLoginAttemptedEvent(request, false, false);
+                    handleFailure(request);
                     return new InvalidUserDataException(DomainErrorMessages.INVALID_CREDENTIALS);
                 });
 
         if (!passwordHasher.matches(request.password(), user.getPassword().value())) {
             log.warn("Intento de login fallido para usuario: {} desde IP: {}",
                     request.email(), request.ipAddress());
-            loginAttemptService.handleFailedAttempt(request.email(), request.ipAddress());
-            publishLoginAttemptedEvent(request, false, false);
+            handleFailure(request);
             throw new InvalidUserDataException(DomainErrorMessages.INVALID_CREDENTIALS);
         }
 
+        return user;
+    }
+
+    private void handleFailure(LoginInputRequest request) {
+        loginAttemptService.handleFailedAttempt(request.email(), request.ipAddress());
+        publishLoginAttemptedEvent(request, false, false);
+    }
+
+    private void handleSuccess(LoginInputRequest request) {
         loginAttemptService.handleSuccessfulAttempt(request.email(), request.ipAddress());
-        String token = tokenGenerator.generateToken(user.getEmail().value());
         log.info("Login exitoso para usuario: {} desde IP: {}", request.email(), request.ipAddress());
         publishLoginAttemptedEvent(request, true, false);
-
-        return new TokenOutputResponse(token);
     }
 
     private void publishLoginAttemptedEvent(LoginInputRequest request, boolean successful, boolean blocked) {
@@ -104,5 +125,3 @@ public class LoginUserUseCaseImpl implements LoginUserInputPort {
         ));
     }
 }
-
-
