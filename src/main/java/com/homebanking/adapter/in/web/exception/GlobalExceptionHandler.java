@@ -9,7 +9,6 @@ import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
 import com.homebanking.domain.exception.user.UserAlreadyExistsException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +20,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order
 @Slf4j
 public class GlobalExceptionHandler {
 
