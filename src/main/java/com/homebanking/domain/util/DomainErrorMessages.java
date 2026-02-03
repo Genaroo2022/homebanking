@@ -122,6 +122,25 @@ public final class DomainErrorMessages {
     public static final String USER_NOT_FOUND =
             "Usuario no encontrado";
 
+    public static final String INVALID_REFRESH_TOKEN =
+            "Refresh token inválido";
+
+    public static final String TOTP_SECRET_REQUIRED =
+            "El secreto TOTP es obligatorio";
+
+    public static final String TOTP_SECRET_INVALID =
+            "El secreto TOTP no tiene un formato válido";
+
+    public static final String TOTP_CODE_REQUIRED =
+            "El código TOTP es obligatorio";
+
+    public static final String TOTP_CODE_INVALID =
+            "El código TOTP es inválido";
+
+    // USER -> Authorization
+    public static final String ACCESS_DENIED =
+            "No tiene permiso para acceder a este recurso";
+
     // ============================================
     // TRANSFER MESSAGES
     // ============================================

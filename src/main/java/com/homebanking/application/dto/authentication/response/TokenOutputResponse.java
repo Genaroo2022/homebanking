@@ -1,9 +1,6 @@
 package com.homebanking.application.dto.authentication.response;
 
 /**
- * DTO de salida del caso de uso LoginUserUseCase.
- * Contiene el JWT generado tras autenticación exitosa.
+ * DTO de salida para autenticación y refresh.
  */
-public record TokenOutputResponse(String token) {}
-
-
+public record TokenOutputResponse(String accessToken, String refreshToken) {}

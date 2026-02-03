@@ -9,6 +9,8 @@ import com.homebanking.domain.valueobject.user.UserEmail;
 import com.homebanking.domain.valueobject.user.UserFirstName;
 import com.homebanking.domain.valueobject.user.UserLastName;
 import com.homebanking.domain.valueobject.user.UserPassword;
+import com.homebanking.domain.valueobject.user.TotpSecret;
+import com.homebanking.domain.enums.TotpStatus;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +32,8 @@ public class User {
     private UserBirthDate birthDate;
     private UserAddress address;
     private LocalDateTime createdAt;
+    private TotpSecret totpSecret;
+    private TotpStatus totpStatus;
 
     public User(String email, String password, String name, String lastName, String dni, LocalDate birthDate, String address) {
         validateUserData(email, password, name, lastName, dni, birthDate, address);
@@ -42,6 +46,7 @@ public class User {
         this.birthDate = UserBirthDate.of(birthDate);
         this.address = UserAddress.of(address);
         this.createdAt = LocalDateTime.now();
+        this.totpStatus = TotpStatus.DISABLED;
     }
 
     // Factory Method: Reconstitution from Persistence
@@ -57,7 +62,31 @@ public class User {
                 UserDni.of(dni),
                 UserBirthDate.of(birthDate),
                 UserAddress.of(address),
-                createdAt
+                createdAt,
+                null,
+                TotpStatus.DISABLED
+        );
+    }
+
+    public static User withId(UUID id, String email, String password, String name, String lastName, String dni,
+                              LocalDate birthDate, String address, LocalDateTime createdAt,
+                              String totpSecret, boolean totpEnabled) {
+        validateStructuralData(id, createdAt);
+        validateUserData(email, password, name, lastName, dni, birthDate, address);
+        TotpSecret secret = totpSecret == null ? null : TotpSecret.of(totpSecret);
+        TotpStatus status = totpEnabled ? TotpStatus.ENABLED : TotpStatus.DISABLED;
+        return hydrate(
+                id,
+                UserEmail.of(email),
+                UserPassword.of(password),
+                UserFirstName.of(name),
+                UserLastName.of(lastName),
+                UserDni.of(dni),
+                UserBirthDate.of(birthDate),
+                UserAddress.of(address),
+                createdAt,
+                secret,
+                status
         );
     }
 
@@ -73,6 +102,23 @@ public class User {
         this.address = UserAddress.of(newAddress);
     }
 
+    public void startTotpSetup(String secret) {
+        this.totpSecret = TotpSecret.of(secret);
+        this.totpStatus = TotpStatus.DISABLED;
+    }
+
+    public void enableTotp() {
+        if (totpSecret == null) {
+            throw new InvalidUserDataException(DomainErrorMessages.TOTP_SECRET_REQUIRED);
+        }
+        this.totpStatus = TotpStatus.ENABLED;
+    }
+
+    public void disableTotp() {
+        this.totpStatus = TotpStatus.DISABLED;
+        this.totpSecret = null;
+    }
+
     // --- VALIDATION METHODS (Private Static) ---
 
     private static void validateUserData(String email, String password, String name, String lastName, String dni, LocalDate birthDate, String address) {
@@ -80,7 +126,8 @@ public class User {
     }
 
     private static User hydrate(UUID id, UserEmail email, UserPassword password, UserFirstName name, UserLastName lastName,
-                                UserDni dni, UserBirthDate birthDate, UserAddress address, LocalDateTime createdAt) {
+                                UserDni dni, UserBirthDate birthDate, UserAddress address, LocalDateTime createdAt,
+                                TotpSecret totpSecret, TotpStatus totpStatus) {
         User user = new User();
         user.id = id;
         user.email = email;
@@ -91,6 +138,8 @@ public class User {
         user.birthDate = birthDate;
         user.address = address;
         user.createdAt = createdAt;
+        user.totpSecret = totpSecret;
+        user.totpStatus = totpStatus == null ? TotpStatus.DISABLED : totpStatus;
         return user;
     }
 

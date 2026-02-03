@@ -1,5 +1,6 @@
 package com.homebanking.adapter.in.web.controller;
 
+import com.homebanking.adapter.in.web.annotation.Auditable;
 import com.homebanking.adapter.in.web.request.DepositAccountRequest;
 import com.homebanking.adapter.in.web.response.DepositAccountResponse;
 import com.homebanking.application.dto.account.request.DepositAccountInputRequest;
@@ -9,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,11 +29,13 @@ public class DevAccountController {
     private final DepositAccountInputPort depositAccountUseCase;
 
     @PostMapping("/{id}/deposit")
+    @Auditable(action = "account.deposit.dev")
     public ResponseEntity<DepositAccountResponse> depositEndpoint(
             @PathVariable("id") UUID accountId,
-            @Valid @RequestBody DepositAccountRequest request) {
+            @Valid @RequestBody DepositAccountRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
         DepositAccountOutputResponse output = depositAccountUseCase.deposit(
-                new DepositAccountInputRequest(accountId, request.amount())
+                new DepositAccountInputRequest(accountId, request.amount(), userDetails.getUsername())
         );
         return ResponseEntity.ok(new DepositAccountResponse(
                 output.accountId(),

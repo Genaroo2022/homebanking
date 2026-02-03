@@ -1,6 +1,7 @@
 package com.homebanking.adapter.out.persistence.user;
 
 import com.homebanking.domain.entity.User;
+import com.homebanking.domain.enums.TotpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,7 +16,9 @@ class UserMapper {
                 user.getDni().value(),
                 user.getBirthDate().value(),
                 user.getAddress().value(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getTotpSecret() == null ? null : user.getTotpSecret().value(),
+                user.getTotpStatus() == TotpStatus.ENABLED
         );
 
         if (user.getId() != null) {
@@ -35,7 +38,9 @@ class UserMapper {
                 entity.getDni(),
                 entity.getBirthDate(),
                 entity.getAddress(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.getTotpSecret(),
+                entity.isTotpEnabled()
         );
     }
 }

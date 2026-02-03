@@ -1,5 +1,6 @@
 package com.homebanking.adapter.in.web.security;
 
+import com.homebanking.port.out.auth.AccessTokenStore;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final AccessTokenStore accessTokenStore;
 
     @Override
     protected void doFilterInternal(
@@ -45,7 +47,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
 
         try {
-            if (jwtService.validateToken(jwt)) {
+            if (jwtService.validateToken(jwt) && jwtService.isAccessToken(jwt)) {
+                if (accessTokenStore.isBlacklisted(jwt)) {
+                    log.warn("Token JWT revocado en la solicitud: {}", request.getRequestURI());
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 userEmail = jwtService.extractUsername(jwt);
 
                 if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -7,6 +7,7 @@ package com.homebanking.port.out.auth;
  */
 public interface TokenGenerator {
     String generateToken(String subject);
+    long getExpirationMillis(String token);
 }
 
 

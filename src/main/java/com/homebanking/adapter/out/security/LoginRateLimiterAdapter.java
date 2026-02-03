@@ -23,8 +23,8 @@ public class LoginRateLimiterAdapter implements LoginRateLimiter {
 
     public LoginRateLimiterAdapter(
             @Value("${security.login-rate-limit.enabled:true}") boolean enabled,
-            @Value("${security.login-rate-limit.capacity:20}") long capacity,
-            @Value("${security.login-rate-limit.window-seconds:60}") long windowSeconds) {
+            @Value("${security.login-rate-limit.capacity:5}") long capacity,
+            @Value("${security.login-rate-limit.window-seconds:900}") long windowSeconds) {
         this.enabled = enabled;
         this.capacity = capacity;
         this.windowSeconds = windowSeconds;

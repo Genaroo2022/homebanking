@@ -5,6 +5,7 @@ import com.homebanking.application.exception.RateLimitExceededException;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
 import com.homebanking.domain.exception.account.InvalidAccountDataException;
 import com.homebanking.domain.exception.card.InvalidCardDataException;
+import com.homebanking.domain.exception.security.AccessDeniedException;
 import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
 import com.homebanking.domain.exception.user.UserAlreadyExistsException;
@@ -157,6 +158,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            AccessDeniedException ex) {
+
+        log.warn("Acceso denegado: {}", ex.getMessage());
+
+        ErrorResponse error = ErrorResponse.of(
+                "ACCESS_DENIED",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
                 .body(error);
     }
 

@@ -15,6 +15,7 @@ public record LoginInputRequest(
         @NotBlank(message = "La contraseña es obligatoria")
         String password,
 
-        String ipAddress
+        String ipAddress,
+        String totpCode
 ) {}
 

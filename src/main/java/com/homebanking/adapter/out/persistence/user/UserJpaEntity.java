@@ -38,11 +38,18 @@ class UserJpaEntity {
     private LocalDate birthDate;
     private String address;
 
+    @Column(name = "totp_secret")
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    private boolean totpEnabled;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     public UserJpaEntity(String name, String lastName, String email, String password,
-                         String dni, LocalDate birthDate, String address, LocalDateTime createdAt) {
+                         String dni, LocalDate birthDate, String address, LocalDateTime createdAt,
+                         String totpSecret, boolean totpEnabled) {
         this.name = name;
         this.lastName = lastName;
         this.email = email;
@@ -51,6 +58,8 @@ class UserJpaEntity {
         this.birthDate = birthDate;
         this.address = address;
         this.createdAt = createdAt;
+        this.totpSecret = totpSecret;
+        this.totpEnabled = totpEnabled;
     }
 }
 

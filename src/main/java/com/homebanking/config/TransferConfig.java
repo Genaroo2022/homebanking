@@ -15,6 +15,7 @@ import com.homebanking.port.out.account.AccountRepository;
 import com.homebanking.port.out.event.EventPublisher;
 import com.homebanking.port.out.transfer.TransferProcessorOutputPort;
 import com.homebanking.port.out.transfer.TransferRepository;
+import com.homebanking.port.out.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -60,8 +61,14 @@ public class TransferConfig {
     @Bean
     public GetTransferInputPort getTransferUseCase(
             TransferRepository transferRepository,
-            TransferMapper transferMapper) {
-        return new GetTransferUseCaseImpl(transferRepository, transferMapper);
+            TransferMapper transferMapper,
+            UserRepository userRepository,
+            AccountRepository accountRepository) {
+        return new GetTransferUseCaseImpl(
+                transferRepository,
+                transferMapper,
+                userRepository,
+                accountRepository);
     }
 
     /**
@@ -88,10 +95,14 @@ public class TransferConfig {
     @Bean
     public RetryTransferInputPort retryFailedTransferUseCase(
             TransferRepository transferRepository,
-            ProcessTransferInputPort processTransferUseCase) {
+            ProcessTransferInputPort processTransferUseCase,
+            UserRepository userRepository,
+            AccountRepository accountRepository) {
         return new RetryFailedTransferUseCaseImpl(
                 transferRepository,
-                processTransferUseCase
+                processTransferUseCase,
+                userRepository,
+                accountRepository
         );
     }
 

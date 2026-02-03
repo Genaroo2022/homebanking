@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public interface RetryTransferInputPort {
     TransferOutputResponse retryFailedTransfer(UUID transferId);
+    TransferOutputResponse retryFailedTransfer(UUID transferId, String requesterEmail);
 }
 
 

@@ -6,6 +6,7 @@ import com.homebanking.application.dto.security.RateLimitStatus;
 import com.homebanking.application.exception.RateLimitExceededException;
 import com.homebanking.application.service.auth.LoginAttemptService;
 import com.homebanking.domain.entity.User;
+import com.homebanking.domain.enums.TotpStatus;
 import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
 import com.homebanking.domain.event.LoginAttemptedEvent;
@@ -16,7 +17,9 @@ import com.homebanking.port.out.event.EventPublisher;
 import com.homebanking.port.out.security.LoginRateLimiter;
 import com.homebanking.port.out.user.UserRepository;
 import com.homebanking.port.out.auth.PasswordHasher;
+import com.homebanking.port.out.auth.RefreshTokenService;
 import com.homebanking.port.out.auth.TokenGenerator;
+import com.homebanking.port.out.auth.TotpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +44,8 @@ public class LoginUserUseCaseImpl implements LoginUserInputPort {
     private final UserRepository userRepository;
     private final PasswordHasher passwordHasher;
     private final TokenGenerator tokenGenerator;
+    private final RefreshTokenService refreshTokenService;
+    private final TotpService totpService;
     private final LoginAttemptService loginAttemptService;
     private final LoginRateLimiter loginRateLimiter;
     private final EventPublisher eventPublisher;
@@ -58,11 +63,13 @@ public class LoginUserUseCaseImpl implements LoginUserInputPort {
         checkBackoff(request);
 
         User user = authenticate(request);
+        verifyTotpIfRequired(user, request);
 
         handleSuccess(request);
-        String token = tokenGenerator.generateToken(user.getEmail().value());
+        String accessToken = tokenGenerator.generateToken(user.getEmail().value());
+        String refreshToken = refreshTokenService.generateRefreshToken(user.getEmail().value());
 
-        return new TokenOutputResponse(token);
+        return new TokenOutputResponse(accessToken, refreshToken);
     }
 
     private void checkRateLimit(LoginInputRequest request) {
@@ -102,6 +109,20 @@ public class LoginUserUseCaseImpl implements LoginUserInputPort {
         }
 
         return user;
+    }
+
+    private void verifyTotpIfRequired(User user, LoginInputRequest request) {
+        if (user.getTotpStatus() == null || user.getTotpStatus() != TotpStatus.ENABLED) {
+            return;
+        }
+        if (request.totpCode() == null || request.totpCode().isBlank()) {
+            handleFailure(request);
+            throw new InvalidUserDataException(DomainErrorMessages.TOTP_CODE_REQUIRED);
+        }
+        if (user.getTotpSecret() == null || !totpService.verifyCode(user.getTotpSecret().value(), request.totpCode())) {
+            handleFailure(request);
+            throw new InvalidUserDataException(DomainErrorMessages.TOTP_CODE_INVALID);
+        }
     }
 
     private void handleFailure(LoginInputRequest request) {

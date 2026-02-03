@@ -18,12 +18,13 @@ public class AuthWebMapper {
         return new LoginInputRequest(
                 request.getEmail(),
                 request.getPassword(),
-                ipAddress
+                ipAddress,
+                request.getTotpCode()
         );
     }
 
     public TokenResponse toResponse(TokenOutputResponse output) {
-        return new TokenResponse(output.token());
+        return new TokenResponse(output.accessToken(), output.refreshToken());
     }
 
     public MeResponse toMeResponse(UserProfileOutputResponse output) {
