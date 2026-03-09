@@ -29,9 +29,12 @@ The project strictly follows **Hexagonal Architecture**.
 
 ## ✅ Current Status
 * **Identity:** User Registration fully implemented with domain validations.
-* **Security:** JWT Authentication, Public/Private endpoints, Password encryption.
-* **Accounts:** Automatic Account creation upon registration, Balance queries (`/me`).
-* **Next Priority:** **Transfers Module Integrations (events, notifications, scheduler hardening).**
+* **Security:** JWT authentication, 2FA (TOTP), token revocation, login rate limiting, and login anomaly signaling via port-based adapters.
+* **Accounts:** Automatic account creation upon registration, protected balance queries (`/auth/me`), and dev-only deposit endpoint.
+* **Transfers:** Asynchronous processing, retry flow, scheduler overlap guards, bounded batch processing, and after-commit notifications.
+* **Bill Payments:** Service bill payment module implemented (`/api/bills/pay`, `/api/bills/{id}`) with idempotency and ownership checks.
+* **Cards:** Card issuance and lifecycle management implemented (`/cards`) with encrypted storage of sensitive card data.
+* **Next Priority:** Production-grade integrations for anomaly detection pipeline (Kafka/SIEM), notification providers (Email/SMS/Push), and key rotation hardening for encrypted card data.
 
 ## 📝 Coding Standards for AI
 1.  **Rich Domain Model:** Do not create Anemic entities. Business logic belongs in the Entity.

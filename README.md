@@ -54,9 +54,11 @@ src/
 ```
 
 ### Notas de implementacion actuales
-- Scheduling de transferencias aislado en `adapter/in/scheduler`.
-- Generacion de tokens y hashing de contrasenas desacoplados via puertos `TokenGenerator` y `PasswordHasher`.
-- Rate limiting por IP en `/auth/login` + backoff exponencial por usuario; se publica `LoginAttemptedEvent` con TODO para integracion Kafka.
+- Scheduling de transferencias aislado en `adapter/in/scheduler` con guardas anti-solapamiento.
+- Procesamiento batch acotado por configuracion (`transfer.processor.max-batch-size`).
+- Generacion de tokens y hashing desacoplados via puertos `TokenGenerator` y `PasswordHasher`.
+- Rate limiting por IP en `/auth/login` + backoff exponencial por usuario.
+- Deteccion de anomalias de login desacoplada por puerto (`LoginAnomalyDetector`) con adapter heuristico inicial.
 - Refresh tokens con rotacion y blacklist en Redis (logout real).
 - Blacklist de access tokens para revocacion inmediata.
 - 2FA TOTP (setup, QR y habilitacion) por usuario.
@@ -66,8 +68,9 @@ src/
 - Transferencias se rechazan si la cuenta destino no existe.
 - Concurrencia de saldo protegida con `@Version` en Account JPA.
 - Endpoint interno de deposito (solo `dev`): `POST /accounts/{id}/deposit`.
-- El procesamiento de transferencias es asíncrono. Al crear una transferencia, su estado inicial es `PENDING` y se procesa automáticamente en segundo plano.
-- Reintentos manuales disponibles en `POST /api/transfers/{id}/retry`.
+- Transferencias asincronas: estado inicial `PENDING`, procesamiento en background, reintentos manuales en `POST /api/transfers/{id}/retry`.
+- Modulo de pago de servicios implementado (`POST /api/bills/pay`, `GET /api/bills/{id}`) con idempotencia y ownership checks.
+- Gestion de tarjetas implementada (`/cards`) con almacenamiento cifrado de PAN/CVV.
 
 
 ## 🛠️ Stack Tecnológico
@@ -91,9 +94,11 @@ El diseño actual contempla la implementación modular de las siguientes caracte
 - [x] 🔐 **Auth & Seguridad:** Login, implementación de JWT, Filtros de seguridad y Auditoría.
 - [x] 🏦 **Gestión de Cuentas:** Consulta de saldos en tiempo real y generación de CBU.
 - [x] 💸 **Transacciones:** Transferencias entre terceros con validaciones ACID (atómicas).
-- [ ] 🧾 **Pagos:** Módulo de pago de servicios (`BillUseCase`).
-- [ ] 📧 **Notificaciones:** Integración con adaptadores de Email, SMS y Push.
-- [ ] 💳 **Tarjetas:** Gestión completa de tarjetas de débito/crédito.
+- [x] 🧾 **Pagos:** Módulo de pago de servicios (`BillUseCase`) implementado.
+- [x] 💳 **Tarjetas:** Gestión de emisión/consulta/activación/desactivación implementada.
+- [x] 📧 **Notificaciones:** Orquestación desacoplada y configurable de canales (Email/SMS/Push) implementada a nivel adapter.
+- [ ] 🌐 **Integraciones externas productivas:** proveedores reales de Email/SMS/Push y pipeline Kafka/SIEM para anomalías.
+- [ ] 🔐 **Hardening criptográfico avanzado:** rotación de claves de cifrado de tarjetas y política operacional de llaves.
 
 ---
 
@@ -165,6 +170,11 @@ El proyecto utiliza el sistema de perfiles de Spring Boot para adaptar la infrae
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
+
+### Variables de entorno sensibles recomendadas
+- `JWT_SECRET` (Base64, requerido)
+- `CARD_DATA_KEY` (Base64 AES 16/24/32 bytes; requerido en `prod`)
+- `SSL_KEY_STORE`, `SSL_KEY_STORE_PASSWORD`, `SSL_KEY_STORE_TYPE` (para TLS en `prod`)
 
 # 📘 Guía de Uso de la API
 
@@ -291,6 +301,30 @@ El procesamiento de la transferencia se inicia automáticamente en segundo plano
     * `GET /api/transfers/{id}`
 * **Reintentar una transferencia que ha fallado:**
     * `POST /api/transfers/{id}/retry`
+
+### 🔟 Pagar un Servicio
+* **Endpoint:** `POST` `/api/bills/pay`
+* **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`, `Idempotency-Key: <UUID>`
+* **Body:**
+```json
+{
+  "accountId": "8cc8f23a-44f2-4b5d-a82d-694112ae2ad9",
+  "billerCode": "EDENOR",
+  "reference": "INV-2026-0001",
+  "amount": 2500.75
+}
+```
+
+### 1️⃣1️⃣ Consultar Pago de Servicio
+* **Endpoint:** `GET` `/api/bills/{id}`
+* **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
+
+### 1️⃣2️⃣ Gestionar Tarjetas
+* **Emitir tarjeta:** `POST /cards`
+* **Listar por cuenta:** `GET /cards/account/{accountId}`
+* **Activar tarjeta:** `PATCH /cards/{cardId}/activate`
+* **Desactivar tarjeta:** `PATCH /cards/{cardId}/deactivate`
+* **Headers:** `Authorization: Bearer <TU_TOKEN_AQUI>`
 # 🧪 Testing
 * **Ejecutar Tests Unitarios**
 ```bash

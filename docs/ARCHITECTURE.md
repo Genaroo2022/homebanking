@@ -1,6 +1,6 @@
 ﻿# 🏛️ Arquitectura del Sistema
 
-🚧 Nota de Estado: Este proyecto se encuentra en su fase fundacional. La estructura de directorios y este documento de arquitectura representan el diseño técnico que guiará la implementación.
+✅ Nota de Estado: Este proyecto ya cuenta con slices funcionales implementados (Identity, Security, Accounts, Transfers, Bill Payments, Cards) y mantiene evolución incremental sobre arquitectura hexagonal.
 
 ## ✨ Visión General
 Este proyecto implementa una **Arquitectura Hexagonal** (Ports & Adapters) estricta. El objetivo principal es garantizar que la lógica de negocio (Domain) permanezca agnóstica a la tecnología, permitiendo cambios en la infraestructura (bases de datos, APIs externas, frameworks web) sin afectar el núcleo del sistema.
@@ -36,7 +36,7 @@ Es el corazón del software. No tiene dependencias externas ni de frameworks.
 * **`util/`**: Constantes y reglas de negocio compartidas (ej. `DomainErrorMessages`). Permite evitar "Magic Strings" y centralizar textos de error.
 *   **`service/`**: Lógica de dominio pura que orquesta interacciones entre múltiples entidades (a implementar).
 *   **`event/`**: 📢 Definición de eventos de dominio que representan sucesos importantes en el negocio (ej. `TransferCreatedEvent`).
-    * Incluye `LoginAttemptedEvent` para preparar detección de anomalías en autenticación.
+    * Incluye `LoginAttemptedEvent` para detección de anomalías desacoplada por puerto.
 
 
 ### ⚙️ 2. Application Layer 
@@ -44,7 +44,7 @@ Es el corazón del software. No tiene dependencias externas ni de frameworks.
 
 
 Orquesta los casos de uso. Define **QUÉ** hace el sistema.
-* **`usecase/`**: Implementación de los casos de uso (ej. `CreateTransferUseCaseImpl`, `ProcessTransferUseCase`, `RetryFailedTransferUseCase`, `GetTransferUseCase`). Aquí reside la orquestación del flujo.
+* **`usecase/`**: Implementación de los casos de uso (ej. `CreateTransferUseCaseImpl`, `ProcessTransferUseCase`, `RetryFailedTransferUseCase`, `GetTransferUseCase`, `PayBillUseCaseImpl`, `CardManagementUseCaseImpl`). Aquí reside la orquestación del flujo.
 * **`dto/`**: Objetos inmutables (Records) para transporte de datos.
     * `request`: Estructuras de entrada (Comandos) que reciben los casos de uso. Encapsulan los datos necesarios para ejecutar una acción.
     * `response`: Estructuras de salida que devuelven los datos procesados, desacoplando el dominio de la vista API.
@@ -70,6 +70,8 @@ Implementación técnica de los puertos. Aquí reside la dependencia con framewo
 #### ➡️ Adapters In (Driving)
 * **`web/controller`**: Controladores REST que reciben peticiones HTTP.
     * `DevAccountController` habilita `POST /accounts/{id}/deposit` solo en perfil `dev`.
+    * `BillPaymentController` expone pagos de servicios.
+    * `CardController` expone emisión y lifecycle de tarjetas.
 * **`web/request`**: DTOs específicos de la capa Web (JSON bodies) con validaciones de formato (@Valid, @NotBlank).
 * **`web/exception`**: Global Exception Handler (@RestControllerAdvice). Intercepta excepciones de dominio y validación para traducirlas a códigos HTTP semánticos (400, 404, 409, 500) con `ErrorResponse`.
 * **`web/filter`**: Filtros de seguridad (JWT) y CORS.
@@ -85,11 +87,11 @@ Implementación técnica de los puertos. Aquí reside la dependencia con framewo
     * `mapper`: Convierte `Domain Model` ↔ `Persistence Entity`.
     * `adapter`: Implementación del Puerto de Salida (`Port Out`). Es el encargado de llamar al repositorio y realizar el mapeo.
 * **`event/`**: Implementación de puertos de salida para la publicación de eventos. Por ejemplo, `SpringEventPublisherAdapter` implementa el puerto `EventPublisher` usando el sistema de eventos de Spring.
-* **`security/`**: Adaptadores de seguridad internos (rate limiting, blacklist de tokens, TOTP).
+* **`security/`**: Adaptadores de seguridad internos (rate limiting, blacklist de tokens, TOTP, cifrado de datos de tarjeta).
 * **`external/`**: Integraciones con terceros, aisladas por contexto:
     * `audit`: Sistemas de log y auditoría.
-    * `notification`: Envío de correos/SMS.
-    * `payment`: Pasarelas de pago.
+    * `notification`: Orquestación de canales Email/SMS/Push mediante adaptadores configurables.
+    * `payment`: Procesadores externos para transferencias y pago de servicios.
     * `security`: Proveedores de autenticación.
 
 ---
@@ -163,7 +165,8 @@ Opté por un diseño de **Entidades Ricas** en contraposición al antipatrón de
 * **Defensa en profundidad:**
   * Rate limiting por IP en /auth/login (adapter out security).
   * Backoff exponencial por usuario (LoginAttemptService + Redis).
-  * Evento LoginAttemptedEvent publicado para futura detección de anomalías (planificado con Kafka; TODO en listener).
+  * Evento LoginAttemptedEvent publicado y analizado por `LoginAnomalyDetector` (adapter heurístico actual, listo para integración Kafka/SIEM).
+  * Datos sensibles de tarjetas (PAN/CVV) cifrados en persistencia vía `CardDataProtector`.
 
 ### 🚨 Manejo Centralizado de Errores (Global Exception Handler)
 Se ha implementado un patrón `RestControllerAdvice` para interceptar excepciones en toda la aplicación y traducirlas a respuestas JSON estandarizadas. Esto evita exponer trazas de error (Stack Traces) al cliente.
