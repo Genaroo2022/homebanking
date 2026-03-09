@@ -5,6 +5,9 @@ import com.homebanking.application.exception.RateLimitExceededException;
 import com.homebanking.domain.exception.account.AccountNotFoundException;
 import com.homebanking.domain.exception.account.InvalidAccountDataException;
 import com.homebanking.domain.exception.card.InvalidCardDataException;
+import com.homebanking.domain.exception.card.CardNotFoundException;
+import com.homebanking.domain.exception.payment.BillPaymentNotFoundException;
+import com.homebanking.domain.exception.payment.InvalidBillPaymentDataException;
 import com.homebanking.domain.exception.security.AccessDeniedException;
 import com.homebanking.domain.exception.user.InvalidUserDataException;
 import com.homebanking.domain.exception.user.TooManyLoginAttemptsException;
@@ -145,6 +148,22 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(InvalidBillPaymentDataException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidBillPaymentData(
+            InvalidBillPaymentDataException ex) {
+
+        log.warn("Error de datos de pago de servicio: {}", ex.getMessage());
+
+        ErrorResponse error = ErrorResponse.of(
+                "INVALID_BILL_PAYMENT_DATA",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
+
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAccountNotFound(
             AccountNotFoundException ex) {
@@ -153,6 +172,38 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.of(
                 "ACCOUNT_NOT_FOUND",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(CardNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCardNotFound(
+            CardNotFoundException ex) {
+
+        log.warn("Tarjeta no encontrada: {}", ex.getCardId());
+
+        ErrorResponse error = ErrorResponse.of(
+                "CARD_NOT_FOUND",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(BillPaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBillPaymentNotFound(
+            BillPaymentNotFoundException ex) {
+
+        log.warn("Pago de servicio no encontrado: {}", ex.getPaymentId());
+
+        ErrorResponse error = ErrorResponse.of(
+                "BILL_PAYMENT_NOT_FOUND",
                 ex.getMessage()
         );
 

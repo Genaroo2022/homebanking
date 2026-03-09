@@ -16,6 +16,7 @@ import com.homebanking.port.out.event.EventPublisher;
 import com.homebanking.port.out.transfer.TransferProcessorOutputPort;
 import com.homebanking.port.out.transfer.TransferRepository;
 import com.homebanking.port.out.user.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -110,11 +111,13 @@ public class TransferConfig {
     public TransferBatchProcessingService transferBatchProcessingService(
             TransferRepository transferRepository,
             ProcessTransferInputPort processTransferUseCase,
-            RetryTransferInputPort retryFailedTransferUseCase) {
+            RetryTransferInputPort retryFailedTransferUseCase,
+            @Value("${transfer.processor.max-batch-size:100}") int maxBatchSize) {
         return new TransferBatchProcessingService(
                 transferRepository,
                 processTransferUseCase,
-                retryFailedTransferUseCase
+                retryFailedTransferUseCase,
+                maxBatchSize
         );
     }
 }

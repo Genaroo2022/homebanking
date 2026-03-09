@@ -22,10 +22,11 @@ public class TransferBatchProcessingService {
     private final TransferRepository transferRepository;
     private final ProcessTransferInputPort processTransferUseCase;
     private final RetryTransferInputPort retryFailedTransferUseCase;
+    private final int maxBatchSize;
 
     @Transactional
     public void processTransfers() {
-        List<Transfer> pendingTransfers = transferRepository.findPendingTransfers();
+        List<Transfer> pendingTransfers = transferRepository.findPendingTransfers(maxBatchSize);
 
         processBatch(
                 pendingTransfers,
@@ -38,7 +39,7 @@ public class TransferBatchProcessingService {
 
     @Transactional
     public void retryFailedTransfers() {
-        List<Transfer> retryableTransfers = transferRepository.findRetryableTransfers();
+        List<Transfer> retryableTransfers = transferRepository.findRetryableTransfers(maxBatchSize);
 
         processBatch(
                 retryableTransfers,

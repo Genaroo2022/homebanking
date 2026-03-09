@@ -26,6 +26,8 @@ public class SecurityConfig {
 
     private static final String USERS_REGISTER = "/users";
     private static final String AUTH_LOGIN = "/auth/login";
+    private static final String AUTH_REFRESH = "/auth/refresh";
+    private static final String AUTH_LOGOUT = "/auth/logout";
 
     // Public URLs that do not require authentication
     private static final String[] PUBLIC_URLS = {
@@ -37,6 +39,9 @@ public class SecurityConfig {
     };
     @Value("${security.require-https:true}")
     private boolean requireHttps;
+
+    @Value("${security.h2-console.enabled:false}")
+    private boolean h2ConsoleEnabled;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
@@ -52,7 +57,11 @@ public class SecurityConfig {
                     // 1. Allow business endpoints (Registration and Login)
                     auth.requestMatchers(HttpMethod.POST, USERS_REGISTER).permitAll();
                     auth.requestMatchers(HttpMethod.POST, AUTH_LOGIN).permitAll();
-                    auth.requestMatchers("/h2-console", "/h2-console/**").permitAll();
+                    auth.requestMatchers(HttpMethod.POST, AUTH_REFRESH).permitAll();
+                    auth.requestMatchers(HttpMethod.POST, AUTH_LOGOUT).permitAll();
+                    if (h2ConsoleEnabled) {
+                        auth.requestMatchers("/h2-console", "/h2-console/**").permitAll();
+                    }
 
                     // 2. Allow all public URLs (Swagger, H2)
                     auth.requestMatchers(PUBLIC_URLS).permitAll();

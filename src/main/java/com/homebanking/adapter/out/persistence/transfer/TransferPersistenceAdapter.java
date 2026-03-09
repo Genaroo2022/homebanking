@@ -2,9 +2,11 @@
 package com.homebanking.adapter.out.persistence.transfer;
 
 import com.homebanking.domain.entity.Transfer;
+import com.homebanking.domain.enums.TransferStatus;
 import com.homebanking.port.out.transfer.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
@@ -67,19 +69,22 @@ class TransferPersistenceAdapter implements TransferRepository {
 
 
     @Override
-    public List<Transfer> findPendingTransfers() {
-        return springDataRepository.findPendingTransfers()
+    public List<Transfer> findPendingTransfers(int limit) {
+        return springDataRepository.findByStatusOrderByCreatedAtAsc(
+                        TransferStatus.PENDING,
+                        PageRequest.of(0, limit))
                 .stream()
                 .map(transferMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Transfer> findRetryableTransfers() {
+    public List<Transfer> findRetryableTransfers(int limit) {
         return springDataRepository
-                .findTop100ByStatusAndRetryCountLessThanOrderByLastRetryAtAsc(
-                        com.homebanking.domain.enums.TransferStatus.FAILED,
-                        3
+                .findByStatusAndRetryCountLessThanOrderByLastRetryAtAsc(
+                        TransferStatus.FAILED,
+                        3,
+                        PageRequest.of(0, limit)
                 )
                 .stream()
                 .map(transferMapper::toDomain)

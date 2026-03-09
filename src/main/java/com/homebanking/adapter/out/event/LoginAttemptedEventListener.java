@@ -1,13 +1,18 @@
 package com.homebanking.adapter.out.event;
 
 import com.homebanking.domain.event.LoginAttemptedEvent;
+import com.homebanking.port.out.security.LoginAnomalyDetector;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class LoginAttemptedEventListener {
+
+    private final LoginAnomalyDetector loginAnomalyDetector;
 
     @EventListener
     public void onLoginAttempted(LoginAttemptedEvent event) {
@@ -19,8 +24,7 @@ public class LoginAttemptedEventListener {
                 event.blocked(),
                 event.occurredAt()
         );
-
-        // TODO: En una fase posterior, enviar a un pipeline de deteccion de anomalias.
+        loginAnomalyDetector.analyze(event);
     }
 }
 

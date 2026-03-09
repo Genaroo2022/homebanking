@@ -41,13 +41,13 @@ public interface TransferRepository {
      * Obtiene transferencias en estado PENDING.
      * Usado por servicio de procesamiento asincrónico.
      */
-    List<Transfer> findPendingTransfers();
+    List<Transfer> findPendingTransfers(int limit);
 
     /**
      * Obtiene transferencias fallidas y reintentables.
      * Usado por servicio de reintentos.
      */
-    List<Transfer> findRetryableTransfers();
+    List<Transfer> findRetryableTransfers(int limit);
 }
 
 

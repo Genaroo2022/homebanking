@@ -265,6 +265,29 @@ public final class DomainErrorMessages {
 
     public static final String CARD_ALREADY_INACTIVE =
             "La tarjeta ya está inactiva";
+
+    public static final String CARD_NOT_FOUND =
+            "La tarjeta especificada no existe";
+    // ============================================
+    // BILL PAYMENT MESSAGES
+    // ============================================
+    public static final String BILLER_CODE_REQUIRED =
+            "El codigo del prestador es obligatorio";
+
+    public static final String BILL_REFERENCE_REQUIRED =
+            "La referencia de factura es obligatoria";
+
+    public static final String BILL_PAYMENT_STATUS_REQUIRED =
+            "El estado del pago de servicio es obligatorio";
+
+    public static final String BILL_PAYMENT_NOT_FOUND =
+            "El pago de servicio especificado no existe";
+
+    public static final String BILL_PAYMENT_INVALID_STATUS_TRANSITION =
+            "No se puede cambiar el estado de un pago de servicio desde %s";
+
+    public static final String BILL_PAYMENT_FAILURE_REASON_REQUIRED =
+            "La razon de rechazo del pago de servicio es obligatoria";
 }
 
 
